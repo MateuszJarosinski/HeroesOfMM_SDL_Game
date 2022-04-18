@@ -6,6 +6,9 @@
 
 int main()
 {
+	int screenWidth = 1920;
+	int screenHeight = 1080;
+
 	// Init SDL libraries
 	SDL_SetMainReady(); // Just leave it be
 	int result = 0;
@@ -26,7 +29,7 @@ int main()
 	// Creating the window 1920x1080 (could be any other size)
 	SDL_Window* window = SDL_CreateWindow("HeroesOfMM",
 		0, 0,
-		1920, 1080,
+		screenWidth, screenHeight,
 		SDL_WINDOW_SHOWN);
 
 	if (!window)
@@ -131,19 +134,19 @@ int main()
 		deltaTime = tickTime - lastTickTime;
 		lastTickTime = tickTime;
 
-		if (currentX < x)
+		if (currentX < x && (x - (tex_width/2) > 0))
 		{
 			x -= acceleration * deltaTime;
 		}
-		if (currentX > x)
+		if (currentX > x && (x + (tex_width/2) < screenWidth))
 		{
 			x += acceleration * deltaTime;
 		}
-		if (currentY < y)
+		if (currentY < y && (y - (tex_height/2) > 0))
 		{
 			y -= acceleration * deltaTime;
 		}
-		if (currentY > y)
+		if (currentY > y && (y + (tex_height / 2) < screenHeight))
 		{
 			y += acceleration * deltaTime;
 		}
