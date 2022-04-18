@@ -3,6 +3,7 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 
+
 int main()
 {
 	// Init SDL libraries
@@ -67,7 +68,18 @@ int main()
 	bool done = false;
 	SDL_Event sdl_event;
 
+	// The coordinates (could be anything)
+	float x = 960.0f;
+	float y = 900.0f;
 
+	int currentX = x;
+	int currentY = y;
+
+	float acceleration = 0.5f;
+
+	uint32_t lastTickTime = 0;
+	uint32_t tickTime = 0;
+	uint32_t deltaTime = 0;
 	// The main loop
 	// Every iteration is a frame
 	while (!done)
@@ -96,14 +108,16 @@ int main()
 					break;
 				}
 			}
-			// More events here?
 			else if(sdl_event.type == SDL_MOUSEBUTTONDOWN)
 			{
 				if (sdl_event.button.button == SDL_BUTTON_RIGHT)
 				{
-					
+					SDL_GetMouseState(&currentX, &currentY);
+					printf("x = %i\n", currentX);
+					printf("y = %i\n", currentY);
 				}
 			}
+			// More events here?
 		}
 
 		// Clearing the screen
@@ -113,9 +127,26 @@ int main()
 
 		// Let's draw a sample image
 
-		// The coordinates (could be anything)
-		int x = 960;
-		int y = 900;
+		tickTime = SDL_GetTicks();
+		deltaTime = tickTime - lastTickTime;
+		lastTickTime = tickTime;
+
+		if (currentX < x)
+		{
+			x -= acceleration * deltaTime;
+		}
+		if (currentX > x)
+		{
+			x += acceleration * deltaTime;
+		}
+		if (currentY < y)
+		{
+			y -= acceleration * deltaTime;
+		}
+		if (currentY > y)
+		{
+			y += acceleration * deltaTime;
+		}
 
 		// Here is the rectangle where the image will be on the screen
 		SDL_Rect rect;

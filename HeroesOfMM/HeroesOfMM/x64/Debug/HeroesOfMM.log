@@ -1,2 +1,4 @@
 ﻿  Main.cpp
+C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\Main.cpp(75,15): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\Main.cpp(76,15): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
   HeroesOfMM.vcxproj -> C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\x64\Debug\HeroesOfMM.exe
