@@ -3,11 +3,31 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 
+uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
+{
+	*tickTime = SDL_GetTicks();
+	uint32_t deltaTime = *tickTime - *lastTickTime;
+	*lastTickTime = *tickTime;
+	return deltaTime;
+}
 
 int main()
 {
 	int screenWidth = 1920;
 	int screenHeight = 1080;
+
+	// The coordinates (could be anything)
+	float x = 960.0f;
+	float y = 900.0f;
+
+	int currentX = x;
+	int currentY = y;
+
+	float acceleration = 0.5f;
+
+	uint32_t lastTickTime = 0;
+	uint32_t tickTime = 0;
+	uint32_t deltaTime = 0;
 
 	// Init SDL libraries
 	SDL_SetMainReady(); // Just leave it be
@@ -71,18 +91,6 @@ int main()
 	bool done = false;
 	SDL_Event sdl_event;
 
-	// The coordinates (could be anything)
-	float x = 960.0f;
-	float y = 900.0f;
-
-	int currentX = x;
-	int currentY = y;
-
-	float acceleration = 0.5f;
-
-	uint32_t lastTickTime = 0;
-	uint32_t tickTime = 0;
-	uint32_t deltaTime = 0;
 	// The main loop
 	// Every iteration is a frame
 	while (!done)
@@ -130,9 +138,7 @@ int main()
 
 		// Let's draw a sample image
 
-		tickTime = SDL_GetTicks();
-		deltaTime = tickTime - lastTickTime;
-		lastTickTime = tickTime;
+		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
 		if (currentX < x && (x - (tex_width/2) > 0))
 		{
