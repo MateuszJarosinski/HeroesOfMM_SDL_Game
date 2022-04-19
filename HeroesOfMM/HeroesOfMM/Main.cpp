@@ -16,7 +16,6 @@ int main()
 	int screenWidth = 1920;
 	int screenHeight = 1080;
 
-	// The coordinates (could be anything)
 	float x = 960.0f;
 	float y = 900.0f;
 
@@ -124,8 +123,8 @@ int main()
 				if (sdl_event.button.button == SDL_BUTTON_RIGHT)
 				{
 					SDL_GetMouseState(&currentX, &currentY);
-					printf("x = %i\n", currentX);
-					printf("y = %i\n", currentY);
+					//printf("x = %i\n", currentX);
+					//printf("y = %i\n", currentY);
 				}
 			}
 			// More events here?
@@ -138,20 +137,25 @@ int main()
 
 		// Let's draw a sample image
 
+		//calculating deltaTime
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
+		//Left
 		if (currentX < x && (x - (tex_width/2) > 0))
 		{
 			x -= acceleration * deltaTime;
 		}
+		//Right
 		if (currentX > x && (x + (tex_width/2) < screenWidth))
 		{
 			x += acceleration * deltaTime;
 		}
+		//Down
 		if (currentY < y && (y - (tex_height/2) > 0))
 		{
 			y -= acceleration * deltaTime;
 		}
+		//Up
 		if (currentY > y && (y + (tex_height / 2) < screenHeight))
 		{
 			y += acceleration * deltaTime;
