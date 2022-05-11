@@ -13,9 +13,9 @@
 #define gridElementPixelHeight 98
 #define gridElementPixelWidth 128
 
-//the board is 12/16 because I need space for the sides of the map (I need them later)
+//the board is 13/17 because I need space for the sides of the map (I need them later)
 //in practice the player plays on 11/15 map
-unsigned char grid[12][16];
+unsigned char grid[13][17];
 
 struct Obstacle
 {
@@ -33,9 +33,9 @@ uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
 
 void SetAllGridElementsToZero()
 {
-	for (int i = 0; i < 11; i++)
+	for (int i = 0; i < 13; i++)
 	{
-		for(int j = 0; j < 15; j++)
+		for(int j = 0; j < 17; j++)
 		{
 			grid[i][j] = 0;
 		}
@@ -54,19 +54,28 @@ void SetArraySides()
 {
 	for (int i = 0; i < 15; i++)
 	{
-		grid[-1][i] = -1;
+		grid[0][i] = 255;
 	}
 	for (int i = 0; i < 11; i++)
 	{
-		grid[i][-1] = -1;
+		grid[i][0] = 255;
+	}
+
+	for (int i = 0; i < 15; i++)
+	{
+		grid[12][i] = 255;
+	}
+	for (int i = 0; i < 11; i++)
+	{
+		grid[i][16] = 255;
 	}
 }
 
 void PrintArray()
 {
-	for (int rows = 0; rows < 11; rows++)
+	for (int rows = 0; rows < 13; rows++)
 	{
-		for (int columns = 0; columns < 15; columns++)
+		for (int columns = 0; columns < 17; columns++)
 		{
 			printf("%d  ", grid[rows][columns]);
 		}
@@ -82,9 +91,9 @@ void GrassfireAlgorithm()
 	while (S)
 	{
 		S = false;
-		for (int i = 0; i < 11; i++)
+		for (int i = 0; i < 13; i++)
 		{
-			for (int j = 0; j < 15; j++)
+			for (int j = 0; j < 17; j++)
 			{
 				unsigned char A = grid[i][j];
 
@@ -96,7 +105,7 @@ void GrassfireAlgorithm()
 					unsigned char gridRight = grid[i][j + 1];
 					unsigned char gridLeft = grid[i][j - 1];
 
-					if (i < 10 && (gridDown != 255 && gridDown < B))
+					if (i < 11 && (gridDown != 255 && gridDown < B))
 					{
 						if (grid[i + 1][j] == 0)
 						{
@@ -112,7 +121,7 @@ void GrassfireAlgorithm()
 							S = true;
 						};
 					}
-					if (j < 14 && (gridRight != 255 && gridRight < B))
+					if (j < 15 && (gridRight != 255 && gridRight < B))
 					{
 						if (grid[i][j + 1] == 0)
 						{
@@ -240,7 +249,7 @@ int main()
 	// Bye-bye the surface
 	SDL_FreeSurface(surface);
 
-	SetAllGridElementsToZero();
+	//SetAllGridElementsToZero();
 	//ArrayHack();
 	//SetObstacles();
 
@@ -305,12 +314,26 @@ int main()
 					playerColumnLocation = x / gridElementPixelWidth;
 					playerRowLocation = y / gridElementPixelHeight;
 
+					columnNum += 1;
+					rowNum += 1;
+
+					playerColumnLocation += 1;
+					playerRowLocation += 1;
+
+					printf("col %i\n", columnNum);
+					printf("row %i\n", rowNum);
+
+					printf("p col %i\n", playerColumnLocation);
+					printf("p row %i\n", playerRowLocation);
+
+
 					if (grid[rowNum][columnNum] != 255)
 					{
 						grid[rowNum][columnNum] = 1;
 					}
 					GrassfireAlgorithm();
 					SetArraySides();
+					PrintArray();
 				}
 			}
 		}
@@ -324,9 +347,6 @@ int main()
 		//calculating deltaTime
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
-		//if(grid[playerRowLocation][playerColumnLocation] != 0)
-		//{
-			//printf("check");
 		unsigned char destination = grid[rowNum][columnNum];
 		unsigned char player = grid[playerRowLocation][playerColumnLocation];
 		unsigned char down = grid[playerRowLocation + 1][playerColumnLocation];
@@ -384,10 +404,10 @@ int main()
 		SDL_Rect rect4;
 
 		SetRect(&rect, x, y, tex_width, tex_height);
-		SetRect(&rect1, obstacle1.positionX, obstacle1.positionY, tex_width, tex_height);
-		SetRect(&rect2, obstacle2.positionX, obstacle2.positionY, tex_width, tex_height);
-		SetRect(&rect3, obstacle3.positionX, obstacle3.positionY, tex_width, tex_height);
-		SetRect(&rect4, obstacle4.positionX, obstacle4.positionY, tex_width, tex_height);
+		SetRect(&rect1, obstacle1.positionX , obstacle1.positionY, tex_width, tex_height);
+		SetRect(&rect2, obstacle2.positionX , obstacle2.positionY, tex_width, tex_height);
+		SetRect(&rect3, obstacle3.positionX , obstacle3.positionY, tex_width, tex_height);
+		SetRect(&rect4, obstacle4.positionX , obstacle4.positionY, tex_width, tex_height);
 
 		DrawImage(renderer, texture, rect);
 		DrawImage(renderer, obstacle_texture, rect1);
