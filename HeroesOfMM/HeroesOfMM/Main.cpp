@@ -33,6 +33,8 @@ struct Vector2f
 
 struct Character
 {
+	SDL_Texture* texture;
+
 	Vector2i position;
 
 	Vector2i destinationGrid = { 0, 0 };
@@ -45,6 +47,8 @@ struct Character
 
 struct Obstacle
 {
+	SDL_Texture* texture;
+
 	Vector2i position;
 	void SetPosition(Vector2i position);
 };
@@ -242,7 +246,7 @@ void DrawImage(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect)
 		SDL_FLIP_NONE); // We don't want to flip the image
 }
 
-bool InitSDL(SDL_Renderer** renderer)
+bool InitSDL(SDL_Renderer** renderer, SDL_Window** window)
 {
 	// Init SDL libraries
 	SDL_SetMainReady(); // Just leave it be
@@ -262,16 +266,16 @@ bool InitSDL(SDL_Renderer** renderer)
 	}
 
 	// Creating the window 1920x1080 (could be any other size)
-	SDL_Window* window = SDL_CreateWindow("HeroesOfMM",
+	*window = SDL_CreateWindow("HeroesOfMM",
 		0, 0,
 		screenWidth, screenHeight,
 		SDL_WINDOW_SHOWN);
 
-	if (!window)
+	if (!*window)
 		return false;
 
 	// Creating a renderer which will draw things on the screen
-	*renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	*renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
 	if (!*renderer)
 		return false;
 
@@ -283,7 +287,18 @@ bool InitSDL(SDL_Renderer** renderer)
 
 int main()
 {
+	SDL_Event sdlEvent;
+	SDL_Renderer* renderer = nullptr;
+	SDL_Window* window = nullptr;
+	SDL_Surface* surface = nullptr;
+	bool initSDLResult = InitSDL(&renderer, &window);
+	if (!initSDLResult)
+	{
+		return -1;
+	}
+
 	Character player;
+	player.texture = SetTexture(surface, renderer, "spaceship.png");
 	//starting position
 	player.position = Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
 	//int x = 960.0f;
@@ -298,51 +313,40 @@ int main()
 	//int destinationX = player.position.x;
 	//int destinationY = player.position.y;
 
+	Obstacle obstacle1;
+	obstacle1.texture = SetTexture(surface, renderer, "star-wars.png");;
+	obstacle1.SetPosition(Vector2i{ 3,10 });
+
+	Obstacle obstacle2;
+	obstacle2.texture = SetTexture(surface, renderer, "star-wars.png");;
+	obstacle2.SetPosition(Vector2i{ 9,9 });
+
+	Obstacle obstacle3;
+	obstacle3.texture = SetTexture(surface, renderer, "star-wars.png");;
+	obstacle3.SetPosition(Vector2i{ 3,4 });
+
+	Obstacle obstacle4;
+	obstacle4.texture = SetTexture(surface, renderer, "star-wars.png");;
+	obstacle4.SetPosition(Vector2i{ 5,7 });
+
+	SDL_FreeSurface(surface);
+
 	float acceleration = 0.5f;
 
 	uint32_t lastTickTime = 0;
 	uint32_t tickTime = 0;
 	uint32_t deltaTime = 0;
 
-	SDL_Renderer* renderer = nullptr;
-	SDL_Surface* surface = nullptr;
-
-	bool initSDLResult = InitSDL(&renderer);
-	if (!initSDLResult)
-	{
-		return -1;
-	}
-
-	SDL_Texture* texture = SetTexture(surface, renderer, "spaceship.png");
-	SDL_Texture* obstacle_texture = SetTexture(surface, renderer, "star-wars.png");
-
 	int texWidth = gridElementPixelWidth;
 	int texHeight = gridElementPixelHeight;
-
-	// Bye-bye the surface
-	SDL_FreeSurface(surface);
 
 	//SetAllGridElementsToZero();
 	//ArrayHack();
 	//SetObstacles();
 
-	bool done = false;
-	SDL_Event sdlEvent;
-
-	Obstacle obstacle1;
-	obstacle1.SetPosition(Vector2i{ 3,10 });
-
-	Obstacle obstacle2;
-	obstacle2.SetPosition(Vector2i{ 9,9 });
-   
-	Obstacle obstacle3;
-	obstacle3.SetPosition(Vector2i{ 3,4 });
-
-	Obstacle obstacle4;
-	obstacle4.SetPosition(Vector2i{ 5,7 });
-
 	// The main loop
 	// Every iteration is a frame
+	bool done = false;
 	while (!done)
 	{
 		// Polling the messages from the OS.
@@ -486,11 +490,11 @@ int main()
 		SetRect(&rect3, obstacle3.position);
 		SetRect(&rect4, obstacle4.position);
 
-		DrawImage(renderer, texture, rect);
-		DrawImage(renderer, obstacle_texture, rect1);
-		DrawImage(renderer, obstacle_texture, rect2);
-		DrawImage(renderer, obstacle_texture, rect3);
-		DrawImage(renderer, obstacle_texture, rect4);
+		DrawImage(renderer, player.texture, rect);
+		DrawImage(renderer, obstacle1.texture, rect1);
+		DrawImage(renderer, obstacle2.texture, rect2);
+		DrawImage(renderer, obstacle3.texture, rect3);
+		DrawImage(renderer, obstacle4.texture, rect4);
 
 		// Showing the screen to the player
 		SDL_RenderPresent(renderer);
