@@ -25,9 +25,22 @@ struct Vector2i
 	int y;
 };
 
+struct Vector2f
+{
+	float x;
+	float y;
+};
+
 struct Character
 {
 	Vector2i position;
+
+	Vector2i destinationGrid = { 0, 0 };
+	//int destinationColumnNum = 0;
+	//int destinationRowNum = 0;
+	Vector2i currentGrid = { 0, 0 };
+	//int currentColumnNum = 0;
+	//int currentRowNum = 0;
 };
 
 struct Obstacle
@@ -229,26 +242,8 @@ void DrawImage(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect)
 		SDL_FLIP_NONE); // We don't want to flip the image
 }
 
-int main()
+bool InitSDL(SDL_Renderer** renderer)
 {
-	//starting position
-	int x = 960.0f;
-	int y = 0 + gridElementPixelHeight/2 + gridElementPixelHeight;
-
-	int columnNum = 0;
-	int rowNum = 0;
-	int playerColumnLocation = 0;
-	int playerRowLocation = 0;
-
-	int destinationX = x;
-	int destinationY = y;
-
-	float acceleration = 0.5f;
-
-	uint32_t lastTickTime = 0;
-	uint32_t tickTime = 0;
-	uint32_t deltaTime = 0;
-
 	// Init SDL libraries
 	SDL_SetMainReady(); // Just leave it be
 	int result = 0;
@@ -256,14 +251,14 @@ int main()
 	if (result) // SDL_Init returns 0 (false) when everything is OK
 	{
 		printf("Can't initialize SDL. Error: %s", SDL_GetError()); // SDL_GetError() returns a string (as const char*) which explains what went wrong with the last operation
-		return -1;
+		return false;
 	}
 
 	result = IMG_Init(IMG_INIT_PNG); // Init of the Image SDL library. We only need to support PNG for this project
 	if (!(result & IMG_INIT_PNG)) // Checking if the PNG decoder has started successfully
 	{
 		printf("Can't initialize SDL image. Error: %s", SDL_GetError());
-		return -1;
+		return false;
 	}
 
 	// Creating the window 1920x1080 (could be any other size)
@@ -273,17 +268,50 @@ int main()
 		SDL_WINDOW_SHOWN);
 
 	if (!window)
-		return -1;
+		return false;
 
 	// Creating a renderer which will draw things on the screen
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-	if (!renderer)
-		return -1;
+	*renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	if (!*renderer)
+		return false;
 
 	// Setting the color of an empty window (RGBA). You are free to adjust it.
-	SDL_SetRenderDrawColor(renderer, 11, 22, 33, 255);
+	SDL_SetRenderDrawColor(*renderer, 11, 22, 33, 255);
 
+	return true;
+}
+
+int main()
+{
+	Character player;
+	//starting position
+	player.position = Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
+	//int x = 960.0f;
+	//int y = 0 + gridElementPixelHeight/2 + gridElementPixelHeight;
+
+	//int destinationColumnNum = 0;
+	//int destinationRowNum = 0;
+	//int currentColumnNum = 0;
+	//int currentRowNum = 0;
+
+	player.destinationGrid = player.position;
+	//int destinationX = player.position.x;
+	//int destinationY = player.position.y;
+
+	float acceleration = 0.5f;
+
+	uint32_t lastTickTime = 0;
+	uint32_t tickTime = 0;
+	uint32_t deltaTime = 0;
+
+	SDL_Renderer* renderer = nullptr;
 	SDL_Surface* surface = nullptr;
+
+	bool initSDLResult = InitSDL(&renderer);
+	if (!initSDLResult)
+	{
+		return -1;
+	}
 
 	SDL_Texture* texture = SetTexture(surface, renderer, "spaceship.png");
 	SDL_Texture* obstacle_texture = SetTexture(surface, renderer, "star-wars.png");
@@ -348,29 +376,37 @@ int main()
 					SetAllGridElementsToZero();
 					SetObstaclePlacement();
 
-					SDL_GetMouseState(&destinationX, &destinationY);
+					SDL_GetMouseState(&player.destinationGrid.x, &player.destinationGrid.y);
 
-					columnNum = destinationX / gridElementPixelWidth;
-					rowNum = destinationY / gridElementPixelHeight;
-					playerColumnLocation = x / gridElementPixelWidth;
-					playerRowLocation = y / gridElementPixelHeight;
+					player.destinationGrid = { player.destinationGrid.x / gridElementPixelWidth ,  player.destinationGrid.y / gridElementPixelHeight };
+					//destinationColumnNum = destinationX / gridElementPixelWidth;
+					//destinationRowNum = destinationY / gridElementPixelHeight;
+					player.currentGrid = { player.position.x / gridElementPixelWidth ,player.position.y / gridElementPixelHeight };
+					//currentColumnNum = player.position.x / gridElementPixelWidth;
+					//currentRowNum = player.position.y / gridElementPixelHeight;
 
-					columnNum += 1;
-					rowNum += 1;
+					player.destinationGrid.x += 1;
+					player.destinationGrid.y += 1;
 
-					playerColumnLocation += 1;
-					playerRowLocation += 1;
+					//destinationColumnNum += 1;
+					//destinationRowNum += 1;
 
-					printf("col %i\n", columnNum);
-					printf("row %i\n", rowNum);
+					player.currentGrid.x += 1;
+					player.currentGrid.y += 1;
 
-					printf("p col %i\n", playerColumnLocation);
-					printf("p row %i\n", playerRowLocation);
+					//currentColumnNum += 1;
+					//currentRowNum += 1;
+
+					//printf("col %i\n", destinationColumnNum);
+					//printf("row %i\n", destinationRowNum);
+
+					//printf("p col %i\n", currentColumnNum);
+					//printf("p row %i\n", currentRowNum);
 
 
-					if (grid[rowNum][columnNum] != 255)
+					if (grid[player.destinationGrid.y][player.destinationGrid.x] != 255)
 					{
-						grid[rowNum][columnNum] = 1;
+						grid[player.destinationGrid.y][player.destinationGrid.x] = 1;
 					}
 					GrassfireAlgorithm();
 					SetArraySides();
@@ -388,49 +424,49 @@ int main()
 		//calculating deltaTime
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
-		uchar destination = grid[rowNum][columnNum];
-		uchar player = grid[playerRowLocation][playerColumnLocation];
-		uchar down = grid[playerRowLocation + 1][playerColumnLocation];
-		uchar up = grid[playerRowLocation - 1][playerColumnLocation];
-		uchar right = grid[playerRowLocation][playerColumnLocation + 1];
-		uchar left = grid[playerRowLocation][playerColumnLocation - 1];
+		uchar destination = grid[player.destinationGrid.y][player.destinationGrid.x];
+		uchar playerPos = grid[player.currentGrid.y][player.currentGrid.x];
+		uchar down = grid[player.currentGrid.y + 1][player.currentGrid.x];
+		uchar up = grid[player.currentGrid.y - 1][player.currentGrid.x];
+		uchar right = grid[player.currentGrid.y][player.currentGrid.x + 1];
+		uchar left = grid[player.currentGrid.y][player.currentGrid.x - 1];
 
 		if (destination != 255)
 		{
-			if (player > up)
+			if (playerPos > up)
 			{
-				if (y - gridElementPixelHeight >= gridElementPixelHeight / 2)
+				if (player.position.y - gridElementPixelHeight >= gridElementPixelHeight / 2)
 				{
-					y -= gridElementPixelHeight;
-					playerRowLocation -= 1;
+					player.position.y -= gridElementPixelHeight;
+					player.currentGrid.y -= 1;
 				}
 				Sleep(150);
 			}
-			else if (player > down)
+			else if (playerPos > down)
 			{
-				if (y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
+				if (player.position.y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
 				{;
-					y += gridElementPixelHeight;
-					playerRowLocation += 1;
+				player.position.y += gridElementPixelHeight;
+				player.currentGrid.y += 1;
 				}
 				Sleep(150);
 			}
 
-			if (player > left)
+			if (playerPos > left)
 			{
-				if (x - gridElementPixelWidth >= gridElementPixelWidth / 2)
+				if (player.position.x - gridElementPixelWidth >= gridElementPixelWidth / 2)
 				{
-					x -= gridElementPixelWidth;
-					playerColumnLocation -= 1;
+					player.position.x -= gridElementPixelWidth;
+					player.currentGrid.x -= 1;
 				}
 				Sleep(150);
 			}
-			else if (player > right)
+			else if (playerPos > right)
 			{
-				if (x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
+				if (player.position.x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
 				{
-					x += gridElementPixelWidth;
-					playerColumnLocation += 1;
+					player.position.x += gridElementPixelWidth;
+					player.currentGrid.x += 1;
 
 				}
 				Sleep(150);
@@ -444,7 +480,7 @@ int main()
 		SDL_Rect rect3;
 		SDL_Rect rect4;
 
-		SetRect(&rect, Vector2i{x,y});
+		SetRect(&rect, player.position);
 		SetRect(&rect1, obstacle1.position);
 		SetRect(&rect2, obstacle2.position);
 		SetRect(&rect3, obstacle3.position);
