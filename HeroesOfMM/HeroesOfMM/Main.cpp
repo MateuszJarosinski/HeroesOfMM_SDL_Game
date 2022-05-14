@@ -4,24 +4,68 @@
 #include "SDL2/SDL_image.h"
 #include <Windows.h>
 
-#define screenWidth 1920
-#define screenHeight 1080
+typedef unsigned char uchar;
 
-#define gridHeight 11
-#define gridWidth 15
+const int screenWidth = 1920;
+const int screenHeight = 1080;
 
-#define gridElementPixelHeight 98
-#define gridElementPixelWidth 128
+const int gridHeight = 11;
+const int gridWidth = 15;
+
+const int gridElementPixelHeight = 98;
+const int gridElementPixelWidth = 128;
 
 //the board is 13/17 because I need space for the sides of the map (I need them later)
 //in practice the player plays on 11/15 map
-unsigned char grid[13][17];
+uchar grid[13][17];
+
+struct Vector2i
+{
+	int x;
+	int y;
+};
+
+struct Character
+{
+	Vector2i position;
+};
 
 struct Obstacle
 {
-	int positionX;
-	int positionY;
+	Vector2i position;
+	void SetPosition(Vector2i position);
 };
+
+void Obstacle::SetPosition(Vector2i pos)
+{
+	position.x = (pos.x - 1) * gridElementPixelWidth + gridElementPixelWidth / 2;
+	position.y = (pos.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
+}
+
+//struct Image
+//{
+//	SDL_Texture* texture;
+//	Vector2i texSize;
+//	void Init(const char* fileName);
+//	void Destroy();
+//	void Render(SDL_Renderer* renderer, Vector2i position);
+//};
+//
+//void Image::Init(const char* fileName)
+//{
+//	/*texture = tex;
+//	texSize = size;*/
+//}
+//
+//void Image::Destroy()
+//{
+//	SDL_DestroyTexture(texture);
+//}
+//
+//void Image::Render(SDL_Renderer* renderer, Vector2i position)
+//{
+//
+//}
 
 uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
 {
@@ -44,10 +88,11 @@ void SetAllGridElementsToZero()
 
 void SetObstaclePlacement()
 {
-	grid[9][2] = 255;
-	grid[8][8] = 255;
-	grid[3][2] = 255;
-	grid[6][4] = 255;
+	//position on grid is: position += 1
+	grid[10][3] = 255;
+	grid[9][9] = 255;
+	grid[4][3] = 255;
+	grid[7][5] = 255;
 }
 
 void SetArraySides()
@@ -95,15 +140,15 @@ void GrassfireAlgorithm()
 		{
 			for (int j = 0; j < 17; j++)
 			{
-				unsigned char A = grid[i][j];
+				uchar A = grid[i][j];
 
 				if (A != 0 && A != 255)
 				{
-					unsigned char B = A + 1;
-					unsigned char gridDown = grid[i + 1][j];
-					unsigned char gridUp = grid[i - 1][j];
-					unsigned char gridRight = grid[i][j + 1];
-					unsigned char gridLeft = grid[i][j - 1];
+					uchar B = A + 1;
+					uchar gridDown = grid[i + 1][j];
+					uchar gridUp = grid[i - 1][j];
+					uchar gridRight = grid[i][j + 1];
+					uchar gridLeft = grid[i][j - 1];
 
 					if (i < 11 && (gridDown != 255 && gridDown < B))
 					{
@@ -144,12 +189,12 @@ void GrassfireAlgorithm()
 	//PrintArray();
 }
 
-SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* image_path)
+SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath)
 {
-	surface = IMG_Load(image_path);
+	surface = IMG_Load(imagePath);
 	if (!surface)
 	{
-		printf("Unable to load an image %s. Error: %s", image_path, IMG_GetError());
+		printf("Unable to load an image %s. Error: %s", imagePath, IMG_GetError());
 		return NULL;
 	}
 
@@ -165,12 +210,12 @@ SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char
 	return texture;
 }
 
-void SetRect(SDL_Rect* rect, int x, int y, int tex_width, int tex_height)
+void SetRect(SDL_Rect* rect, Vector2i position)
 {
-	rect->x = (int)round(x - tex_width / 2); // Counting from the image's center but that's up to you
-	rect->y = (int)round(y - tex_height / 2); // Counting from the image's center but that's up to you
-	rect->w = (int)tex_width;
-	rect->h = (int)tex_height;
+	rect->x = (int)round(position.x - gridElementPixelWidth / 2); // Counting from the image's center but that's up to you
+	rect->y = (int)round(position.y - gridElementPixelHeight / 2); // Counting from the image's center but that's up to you
+	rect->w = (int)gridElementPixelWidth;
+	rect->h = (int)gridElementPixelHeight;
 }
 
 void DrawImage(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect)
@@ -243,8 +288,8 @@ int main()
 	SDL_Texture* texture = SetTexture(surface, renderer, "spaceship.png");
 	SDL_Texture* obstacle_texture = SetTexture(surface, renderer, "star-wars.png");
 
-	int tex_width = gridElementPixelWidth;
-	int tex_height = gridElementPixelHeight;
+	int texWidth = gridElementPixelWidth;
+	int texHeight = gridElementPixelHeight;
 
 	// Bye-bye the surface
 	SDL_FreeSurface(surface);
@@ -254,23 +299,19 @@ int main()
 	//SetObstacles();
 
 	bool done = false;
-	SDL_Event sdl_event;
+	SDL_Event sdlEvent;
 
 	Obstacle obstacle1;
-	obstacle1.positionX = 2 * gridElementPixelWidth + gridElementPixelWidth / 2;
-	obstacle1.positionY = 9 * gridElementPixelHeight + gridElementPixelHeight / 2;
+	obstacle1.SetPosition(Vector2i{ 3,10 });
 
 	Obstacle obstacle2;
-	obstacle2.positionX = 8 * gridElementPixelWidth + gridElementPixelWidth / 2;
-	obstacle2.positionY = 8 * gridElementPixelHeight + gridElementPixelHeight / 2;
-
+	obstacle2.SetPosition(Vector2i{ 9,9 });
+   
 	Obstacle obstacle3;
-	obstacle3.positionX = 2 * gridElementPixelWidth + gridElementPixelWidth / 2;
-	obstacle3.positionY = 3 * gridElementPixelHeight + gridElementPixelHeight / 2;
+	obstacle3.SetPosition(Vector2i{ 3,4 });
 
 	Obstacle obstacle4;
-	obstacle4.positionX = 4 * gridElementPixelWidth + gridElementPixelWidth / 2;
-	obstacle4.positionY = 6 * gridElementPixelHeight + gridElementPixelHeight / 2;
+	obstacle4.SetPosition(Vector2i{ 5,7 });
 
 	// The main loop
 	// Every iteration is a frame
@@ -278,15 +319,15 @@ int main()
 	{
 		// Polling the messages from the OS.
 		// That could be key downs, mouse movement, ALT+F4 or many others
-		while (SDL_PollEvent(&sdl_event))
+		while (SDL_PollEvent(&sdlEvent))
 		{
-			if (sdl_event.type == SDL_QUIT) // The user wants to quit
+			if (sdlEvent.type == SDL_QUIT) // The user wants to quit
 			{
 				done = true;
 			}
-			else if (sdl_event.type == SDL_KEYDOWN) // A key was pressed
+			else if (sdlEvent.type == SDL_KEYDOWN) // A key was pressed
 			{
-				switch (sdl_event.key.keysym.sym) // Which key?
+				switch (sdlEvent.key.keysym.sym) // Which key?
 				{
 				case SDLK_ESCAPE: // Posting a quit message to the OS queue so it gets processed on the next step and closes the game
 					SDL_Event event;
@@ -300,9 +341,9 @@ int main()
 					break;
 				}
 			}
-			else if (sdl_event.type == SDL_MOUSEBUTTONDOWN)
+			else if (sdlEvent.type == SDL_MOUSEBUTTONDOWN)
 			{
-				if (sdl_event.button.button == SDL_BUTTON_RIGHT)
+				if (sdlEvent.button.button == SDL_BUTTON_RIGHT)
 				{
 					SetAllGridElementsToZero();
 					SetObstaclePlacement();
@@ -347,12 +388,12 @@ int main()
 		//calculating deltaTime
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
-		unsigned char destination = grid[rowNum][columnNum];
-		unsigned char player = grid[playerRowLocation][playerColumnLocation];
-		unsigned char down = grid[playerRowLocation + 1][playerColumnLocation];
-		unsigned char up = grid[playerRowLocation - 1][playerColumnLocation];
-		unsigned char right = grid[playerRowLocation][playerColumnLocation + 1];
-		unsigned char left = grid[playerRowLocation][playerColumnLocation - 1];
+		uchar destination = grid[rowNum][columnNum];
+		uchar player = grid[playerRowLocation][playerColumnLocation];
+		uchar down = grid[playerRowLocation + 1][playerColumnLocation];
+		uchar up = grid[playerRowLocation - 1][playerColumnLocation];
+		uchar right = grid[playerRowLocation][playerColumnLocation + 1];
+		uchar left = grid[playerRowLocation][playerColumnLocation - 1];
 
 		if (destination != 255)
 		{
@@ -403,11 +444,11 @@ int main()
 		SDL_Rect rect3;
 		SDL_Rect rect4;
 
-		SetRect(&rect, x, y, tex_width, tex_height);
-		SetRect(&rect1, obstacle1.positionX , obstacle1.positionY, tex_width, tex_height);
-		SetRect(&rect2, obstacle2.positionX , obstacle2.positionY, tex_width, tex_height);
-		SetRect(&rect3, obstacle3.positionX , obstacle3.positionY, tex_width, tex_height);
-		SetRect(&rect4, obstacle4.positionX , obstacle4.positionY, tex_width, tex_height);
+		SetRect(&rect, Vector2i{x,y});
+		SetRect(&rect1, obstacle1.position);
+		SetRect(&rect2, obstacle2.position);
+		SetRect(&rect3, obstacle3.position);
+		SetRect(&rect4, obstacle4.position);
 
 		DrawImage(renderer, texture, rect);
 		DrawImage(renderer, obstacle_texture, rect1);
@@ -439,22 +480,22 @@ int main()
 }
 
 //Left
-	//if (currentX < x && (x - (tex_width/2) > 0))
+	//if (currentX < x && (x - (texWidth/2) > 0))
 	//{
 	//	x -= acceleration * deltaTime;
 	//}
 	////Right
-	//if (currentX > x && (x + (tex_width/2) < screenWidth))
+	//if (currentX > x && (x + (texWidth/2) < screenWidth))
 	//{
 	//	x += acceleration * deltaTime;
 	//}
 	////Down
-	//if (currentY < y && (y - (tex_height/2) > 0))
+	//if (currentY < y && (y - (texHeight/2) > 0))
 	//{
 	//	y -= acceleration * deltaTime;
 	//}
 	////Up
-	//if (currentY > y && (y + (tex_height / 2) < screenHeight))
+	//if (currentY > y && (y + (texHeight / 2) < screenHeight))
 	//{
 	//	y += acceleration * deltaTime;
 	//}
