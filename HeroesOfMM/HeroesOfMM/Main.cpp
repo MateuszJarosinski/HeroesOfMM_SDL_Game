@@ -25,25 +25,67 @@ struct Vector2i
 	int y;
 };
 
-struct Vector2f
-{
-	float x;
-	float y;
-};
-
 struct Character
 {
 	SDL_Texture* texture;
-
 	Vector2i position;
-
 	Vector2i destinationGrid = { 0, 0 };
-	//int destinationColumnNum = 0;
-	//int destinationRowNum = 0;
 	Vector2i currentGrid = { 0, 0 };
-	//int currentColumnNum = 0;
-	//int currentRowNum = 0;
+
+	void Move();
 };
+
+void Character::Move()
+{
+	uchar destination = grid[destinationGrid.y][destinationGrid.x];
+	uchar playerPos = grid[currentGrid.y][currentGrid.x];
+	uchar down = grid[currentGrid.y + 1][currentGrid.x];
+	uchar up = grid[currentGrid.y - 1][currentGrid.x];
+	uchar right = grid[currentGrid.y][currentGrid.x + 1];
+	uchar left = grid[currentGrid.y][currentGrid.x - 1];
+
+	if (destination != 255)
+	{
+		if (playerPos > up)
+		{
+			if (position.y - gridElementPixelHeight >= gridElementPixelHeight / 2)
+			{
+				position.y -= gridElementPixelHeight;
+				currentGrid.y -= 1;
+			}
+			Sleep(150);
+		}
+		else if (playerPos > down)
+		{
+			if (position.y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
+			{
+				position.y += gridElementPixelHeight;
+				currentGrid.y += 1;
+			}
+			Sleep(150);
+		}
+
+		if (playerPos > left)
+		{
+			if (position.x - gridElementPixelWidth >= gridElementPixelWidth / 2)
+			{
+				position.x -= gridElementPixelWidth;
+				currentGrid.x -= 1;
+			}
+			Sleep(150);
+		}
+		else if (playerPos > right)
+		{
+			if (position.x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
+			{
+				position.x += gridElementPixelWidth;
+				currentGrid.x += 1;
+
+			}
+			Sleep(150);
+		}
+	}
+}
 
 struct Obstacle
 {
@@ -58,31 +100,6 @@ void Obstacle::SetPosition(Vector2i pos)
 	position.x = (pos.x - 1) * gridElementPixelWidth + gridElementPixelWidth / 2;
 	position.y = (pos.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
 }
-
-//struct Image
-//{
-//	SDL_Texture* texture;
-//	Vector2i texSize;
-//	void Init(const char* fileName);
-//	void Destroy();
-//	void Render(SDL_Renderer* renderer, Vector2i position);
-//};
-//
-//void Image::Init(const char* fileName)
-//{
-//	/*texture = tex;
-//	texSize = size;*/
-//}
-//
-//void Image::Destroy()
-//{
-//	SDL_DestroyTexture(texture);
-//}
-//
-//void Image::Render(SDL_Renderer* renderer, Vector2i position)
-//{
-//
-//}
 
 uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
 {
@@ -203,7 +220,6 @@ void GrassfireAlgorithm()
 			}
 		}
 	}
-	//PrintArray();
 }
 
 SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath)
@@ -299,19 +315,9 @@ int main()
 
 	Character player;
 	player.texture = SetTexture(surface, renderer, "spaceship.png");
-	//starting position
 	player.position = Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
-	//int x = 960.0f;
-	//int y = 0 + gridElementPixelHeight/2 + gridElementPixelHeight;
-
-	//int destinationColumnNum = 0;
-	//int destinationRowNum = 0;
-	//int currentColumnNum = 0;
-	//int currentRowNum = 0;
-
 	player.destinationGrid = player.position;
-	//int destinationX = player.position.x;
-	//int destinationY = player.position.y;
+
 
 	Obstacle obstacle1;
 	obstacle1.texture = SetTexture(surface, renderer, "star-wars.png");;
@@ -339,10 +345,6 @@ int main()
 
 	int texWidth = gridElementPixelWidth;
 	int texHeight = gridElementPixelHeight;
-
-	//SetAllGridElementsToZero();
-	//ArrayHack();
-	//SetObstacles();
 
 	// The main loop
 	// Every iteration is a frame
@@ -383,30 +385,13 @@ int main()
 					SDL_GetMouseState(&player.destinationGrid.x, &player.destinationGrid.y);
 
 					player.destinationGrid = { player.destinationGrid.x / gridElementPixelWidth ,  player.destinationGrid.y / gridElementPixelHeight };
-					//destinationColumnNum = destinationX / gridElementPixelWidth;
-					//destinationRowNum = destinationY / gridElementPixelHeight;
 					player.currentGrid = { player.position.x / gridElementPixelWidth ,player.position.y / gridElementPixelHeight };
-					//currentColumnNum = player.position.x / gridElementPixelWidth;
-					//currentRowNum = player.position.y / gridElementPixelHeight;
 
 					player.destinationGrid.x += 1;
 					player.destinationGrid.y += 1;
 
-					//destinationColumnNum += 1;
-					//destinationRowNum += 1;
-
 					player.currentGrid.x += 1;
 					player.currentGrid.y += 1;
-
-					//currentColumnNum += 1;
-					//currentRowNum += 1;
-
-					//printf("col %i\n", destinationColumnNum);
-					//printf("row %i\n", destinationRowNum);
-
-					//printf("p col %i\n", currentColumnNum);
-					//printf("p row %i\n", currentRowNum);
-
 
 					if (grid[player.destinationGrid.y][player.destinationGrid.x] != 255)
 					{
@@ -414,7 +399,6 @@ int main()
 					}
 					GrassfireAlgorithm();
 					SetArraySides();
-					PrintArray();
 				}
 			}
 		}
@@ -428,54 +412,56 @@ int main()
 		//calculating deltaTime
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
-		uchar destination = grid[player.destinationGrid.y][player.destinationGrid.x];
-		uchar playerPos = grid[player.currentGrid.y][player.currentGrid.x];
-		uchar down = grid[player.currentGrid.y + 1][player.currentGrid.x];
-		uchar up = grid[player.currentGrid.y - 1][player.currentGrid.x];
-		uchar right = grid[player.currentGrid.y][player.currentGrid.x + 1];
-		uchar left = grid[player.currentGrid.y][player.currentGrid.x - 1];
+		//uchar destination = grid[player.destinationGrid.y][player.destinationGrid.x];
+		//uchar playerPos = grid[player.currentGrid.y][player.currentGrid.x];
+		//uchar down = grid[player.currentGrid.y + 1][player.currentGrid.x];
+		//uchar up = grid[player.currentGrid.y - 1][player.currentGrid.x];
+		//uchar right = grid[player.currentGrid.y][player.currentGrid.x + 1];
+		//uchar left = grid[player.currentGrid.y][player.currentGrid.x - 1];
 
-		if (destination != 255)
-		{
-			if (playerPos > up)
-			{
-				if (player.position.y - gridElementPixelHeight >= gridElementPixelHeight / 2)
-				{
-					player.position.y -= gridElementPixelHeight;
-					player.currentGrid.y -= 1;
-				}
-				Sleep(150);
-			}
-			else if (playerPos > down)
-			{
-				if (player.position.y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
-				{;
-				player.position.y += gridElementPixelHeight;
-				player.currentGrid.y += 1;
-				}
-				Sleep(150);
-			}
+		//if (destination != 255)
+		//{
+		//	if (playerPos > up)
+		//	{
+		//		if (player.position.y - gridElementPixelHeight >= gridElementPixelHeight / 2)
+		//		{
+		//			player.position.y -= gridElementPixelHeight;
+		//			player.currentGrid.y -= 1;
+		//		}
+		//		Sleep(150);
+		//	}
+		//	else if (playerPos > down)
+		//	{
+		//		if (player.position.y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
+		//		{;
+		//		player.position.y += gridElementPixelHeight;
+		//		player.currentGrid.y += 1;
+		//		}
+		//		Sleep(150);
+		//	}
 
-			if (playerPos > left)
-			{
-				if (player.position.x - gridElementPixelWidth >= gridElementPixelWidth / 2)
-				{
-					player.position.x -= gridElementPixelWidth;
-					player.currentGrid.x -= 1;
-				}
-				Sleep(150);
-			}
-			else if (playerPos > right)
-			{
-				if (player.position.x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
-				{
-					player.position.x += gridElementPixelWidth;
-					player.currentGrid.x += 1;
+		//	if (playerPos > left)
+		//	{
+		//		if (player.position.x - gridElementPixelWidth >= gridElementPixelWidth / 2)
+		//		{
+		//			player.position.x -= gridElementPixelWidth;
+		//			player.currentGrid.x -= 1;
+		//		}
+		//		Sleep(150);
+		//	}
+		//	else if (playerPos > right)
+		//	{
+		//		if (player.position.x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
+		//		{
+		//			player.position.x += gridElementPixelWidth;
+		//			player.currentGrid.x += 1;
 
-				}
-				Sleep(150);
-			}
-		}
+		//		}
+		//		Sleep(150);
+		//	}
+		//}
+
+		player.Move();
 
 		// Here is the rectangle where the image will be on the screen
 		SDL_Rect rect;
