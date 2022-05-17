@@ -1,8 +1,12 @@
 #include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 #define SDL_MAIN_HANDLED
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include <Windows.h>
+
+SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath);
 
 typedef unsigned char uchar;
 
@@ -17,7 +21,7 @@ const int gridElementPixelWidth = 128;
 
 //the board is 13/17 because I need space for the sides of the map (I need them later)
 //in practice the player plays on 11/15 map
-uchar grid[13][17];
+uchar battlefield[13][17];
 
 struct Vector2i
 {
@@ -25,29 +29,137 @@ struct Vector2i
 	int y;
 };
 
+Vector2i MouseToGridPos(Vector2i mousePos)
+{
+	Vector2i gridPos = { mousePos.x / gridElementPixelWidth ,  mousePos.y / gridElementPixelHeight };
+	return gridPos;
+}
+
+void GrassfireAlgorithm()
+{
+	bool S = true;
+
+	while (S)
+	{
+		S = false;
+		for (int i = 0; i < 13; i++)
+		{
+			for (int j = 0; j < 17; j++)
+			{
+				uchar A = battlefield[i][j];
+
+				if (A != 0 && A != 255)
+				{
+					uchar B = A + 1;
+					uchar gridDown = battlefield[i + 1][j];
+					uchar gridUp = battlefield[i - 1][j];
+					uchar gridRight = battlefield[i][j + 1];
+					uchar gridLeft = battlefield[i][j - 1];
+
+					if (i < 11 && (gridDown != 255 && gridDown < B))
+					{
+						if (battlefield[i + 1][j] == 0)
+						{
+							battlefield[i + 1][j] = B;
+							S = true;
+						};
+					}
+					if (i > 0 && (gridUp != 255 && gridUp < B))
+					{
+						if (battlefield[i - 1][j] == 0)
+						{
+							battlefield[i - 1][j] = B;
+							S = true;
+						};
+					}
+					if (j < 15 && (gridRight != 255 && gridRight < B))
+					{
+						if (battlefield[i][j + 1] == 0)
+						{
+							battlefield[i][j + 1] = B;
+							S = true;
+						};
+					}
+					if (j > 0 && (gridLeft != 255 && gridLeft < B))
+					{
+						if (battlefield[i][j - 1] == 0)
+						{
+							battlefield[i][j - 1] = B;
+							S = true;
+						};
+					}
+				}
+			}
+		}
+	}
+}
+
+void SetArraySides()
+{
+	for (int i = 0; i < 15; i++)
+	{
+		battlefield[0][i] = 255;
+	}
+	for (int i = 0; i < 11; i++)
+	{
+		battlefield[i][0] = 255;
+	}
+
+	for (int i = 0; i < 15; i++)
+	{
+		battlefield[12][i] = 255;
+	}
+	for (int i = 0; i < 11; i++)
+	{
+		battlefield[i][16] = 255;
+	}
+}
+
 struct Character
 {
 	SDL_Texture* texture;
 	Vector2i position;
-	Vector2i destinationGrid = { 0, 0 };
-	Vector2i currentGrid = { 0, 0 };
+	Vector2i currentGrid;
 
-	void Move();
+	Character(SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath, Vector2i pos);
+	void Move(Vector2i destinationGrid);
 };
 
-void Character::Move()
+Character::Character(SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath, Vector2i pos)
 {
-	uchar destination = grid[destinationGrid.y][destinationGrid.x];
-	uchar playerPos = grid[currentGrid.y][currentGrid.x];
-	uchar down = grid[currentGrid.y + 1][currentGrid.x];
-	uchar up = grid[currentGrid.y - 1][currentGrid.x];
-	uchar right = grid[currentGrid.y][currentGrid.x + 1];
-	uchar left = grid[currentGrid.y][currentGrid.x - 1];
+	position = pos;
+	texture = SetTexture(sur, rend, imagePath);
+}
+
+void Character::Move(Vector2i destinationGrid)
+{
+	currentGrid = { position.x / gridElementPixelWidth ,position.y / gridElementPixelHeight };
+	destinationGrid.x += 1;
+	destinationGrid.y += 1;
+	currentGrid.x += 1;
+	currentGrid.y += 1;
+
+	if (battlefield[destinationGrid.y][destinationGrid.x] != 255)
+	{
+		battlefield[destinationGrid.y][destinationGrid.x] = 1;
+	}
+
+	uchar destination = battlefield[destinationGrid.y][destinationGrid.x];
+	uchar playerPos = battlefield[currentGrid.y][currentGrid.x];
+	uchar down = battlefield[currentGrid.y + 1][currentGrid.x];
+	uchar up = battlefield[currentGrid.y - 1][currentGrid.x];
+	uchar right = battlefield[currentGrid.y][currentGrid.x + 1];
+	uchar left = battlefield[currentGrid.y][currentGrid.x - 1];
+
+	GrassfireAlgorithm();
+	SetArraySides();
 
 	if (destination != 255)
 	{
+		
 		if (playerPos > up)
 		{
+			//printf("check\n");
 			if (position.y - gridElementPixelHeight >= gridElementPixelHeight / 2)
 			{
 				position.y -= gridElementPixelHeight;
@@ -57,6 +169,7 @@ void Character::Move()
 		}
 		else if (playerPos > down)
 		{
+			//printf("check\n");
 			if (position.y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
 			{
 				position.y += gridElementPixelHeight;
@@ -67,6 +180,7 @@ void Character::Move()
 
 		if (playerPos > left)
 		{
+			//printf("check\n");
 			if (position.x - gridElementPixelWidth >= gridElementPixelWidth / 2)
 			{
 				position.x -= gridElementPixelWidth;
@@ -76,6 +190,7 @@ void Character::Move()
 		}
 		else if (playerPos > right)
 		{
+			//printf("check\n");
 			if (position.x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
 			{
 				position.x += gridElementPixelWidth;
@@ -92,13 +207,22 @@ struct Obstacle
 	SDL_Texture* texture;
 
 	Vector2i position;
-	void SetPosition(Vector2i position);
+
+	Obstacle(Vector2i pos, SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath);
+	void PlaceObstacle();
 };
 
-void Obstacle::SetPosition(Vector2i pos)
+Obstacle::Obstacle(Vector2i pos, SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath)
 {
-	position.x = (pos.x - 1) * gridElementPixelWidth + gridElementPixelWidth / 2;
-	position.y = (pos.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
+	position = pos;
+	PlaceObstacle();
+	texture = SetTexture(surface, renderer, imagePath);
+}
+
+void Obstacle::PlaceObstacle()
+{
+	position.x = (position.x - 1) * gridElementPixelWidth + gridElementPixelWidth / 2;
+	position.y = (position.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
 }
 
 uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
@@ -115,7 +239,7 @@ void SetAllGridElementsToZero()
 	{
 		for(int j = 0; j < 17; j++)
 		{
-			grid[i][j] = 0;
+			battlefield[i][j] = 0;
 		}
 	}
 }
@@ -123,31 +247,10 @@ void SetAllGridElementsToZero()
 void SetObstaclePlacement()
 {
 	//position on grid is: position += 1
-	grid[10][3] = 255;
-	grid[9][9] = 255;
-	grid[4][3] = 255;
-	grid[7][5] = 255;
-}
-
-void SetArraySides()
-{
-	for (int i = 0; i < 15; i++)
-	{
-		grid[0][i] = 255;
-	}
-	for (int i = 0; i < 11; i++)
-	{
-		grid[i][0] = 255;
-	}
-
-	for (int i = 0; i < 15; i++)
-	{
-		grid[12][i] = 255;
-	}
-	for (int i = 0; i < 11; i++)
-	{
-		grid[i][16] = 255;
-	}
+	battlefield[10][3] = 255;
+	battlefield[9][9] = 255;
+	battlefield[4][3] = 255;
+	battlefield[7][5] = 255;
 }
 
 void PrintArray()
@@ -156,71 +259,14 @@ void PrintArray()
 	{
 		for (int columns = 0; columns < 17; columns++)
 		{
-			printf("%d  ", grid[rows][columns]);
+			printf("%d  ", battlefield[rows][columns]);
 		}
 		printf("\n");
 	}
 	printf("\n");
 }
 
-void GrassfireAlgorithm()
-{
-	bool S = true;
 
-	while (S)
-	{
-		S = false;
-		for (int i = 0; i < 13; i++)
-		{
-			for (int j = 0; j < 17; j++)
-			{
-				uchar A = grid[i][j];
-
-				if (A != 0 && A != 255)
-				{
-					uchar B = A + 1;
-					uchar gridDown = grid[i + 1][j];
-					uchar gridUp = grid[i - 1][j];
-					uchar gridRight = grid[i][j + 1];
-					uchar gridLeft = grid[i][j - 1];
-
-					if (i < 11 && (gridDown != 255 && gridDown < B))
-					{
-						if (grid[i + 1][j] == 0)
-						{
-							grid[i + 1][j] = B;
-							S = true;
-						};
-					}
-					if (i > 0 && (gridUp != 255 && gridUp < B))
-					{
-						if (grid[i - 1][j] == 0)
-						{
-							grid[i - 1][j] = B;
-							S = true;
-						};
-					}
-					if (j < 15 && (gridRight != 255 && gridRight < B))
-					{
-						if (grid[i][j + 1] == 0)
-						{
-							grid[i][j + 1] = B;
-							S = true;
-						};
-					}
-					if (j > 0 && (gridLeft != 255 && gridLeft < B))
-					{
-						if (grid[i][j - 1] == 0)
-						{
-							grid[i][j - 1] = B;
-							S = true;
-						};
-					}
-				}
-			}
-		}
-	}
-}
 
 SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath)
 {
@@ -303,6 +349,8 @@ bool InitSDL(SDL_Renderer** renderer, SDL_Window** window)
 
 int main()
 {
+	Vector2i mousePos = { 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
+
 	SDL_Event sdlEvent;
 	SDL_Renderer* renderer = nullptr;
 	SDL_Window* window = nullptr;
@@ -313,27 +361,19 @@ int main()
 		return -1;
 	}
 
-	Character player;
-	player.texture = SetTexture(surface, renderer, "spaceship.png");
-	player.position = Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
-	player.destinationGrid = player.position;
+	Character player(surface, renderer, "spaceship.png", Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight });
+	//player.texture = SetTexture(surface, renderer, "spaceship.png");
+	//player.position = Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
+
+	Character enemy(surface, renderer, "star-wars.png", Vector2i{ 960,  0 + 5 * gridElementPixelHeight / 2 + gridElementPixelHeight });
+	//enemy.texture = SetTexture(surface, renderer, "star-wars.png");
+	//enemy.position = Vector2i{ 960,  0 + 5*gridElementPixelHeight / 2 + gridElementPixelHeight };
 
 
-	Obstacle obstacle1;
-	obstacle1.texture = SetTexture(surface, renderer, "star-wars.png");;
-	obstacle1.SetPosition(Vector2i{ 3,10 });
-
-	Obstacle obstacle2;
-	obstacle2.texture = SetTexture(surface, renderer, "star-wars.png");;
-	obstacle2.SetPosition(Vector2i{ 9,9 });
-
-	Obstacle obstacle3;
-	obstacle3.texture = SetTexture(surface, renderer, "star-wars.png");;
-	obstacle3.SetPosition(Vector2i{ 3,4 });
-
-	Obstacle obstacle4;
-	obstacle4.texture = SetTexture(surface, renderer, "star-wars.png");;
-	obstacle4.SetPosition(Vector2i{ 5,7 });
+	Obstacle obstacle1({3,10}, surface, renderer, "star-wars.png");
+	Obstacle obstacle2({9,9}, surface, renderer, "star-wars.png");
+	Obstacle obstacle3({3,4}, surface, renderer, "star-wars.png");
+	Obstacle obstacle4({5,7}, surface, renderer, "star-wars.png");
 
 	SDL_FreeSurface(surface);
 
@@ -382,23 +422,7 @@ int main()
 					SetAllGridElementsToZero();
 					SetObstaclePlacement();
 
-					SDL_GetMouseState(&player.destinationGrid.x, &player.destinationGrid.y);
-
-					player.destinationGrid = { player.destinationGrid.x / gridElementPixelWidth ,  player.destinationGrid.y / gridElementPixelHeight };
-					player.currentGrid = { player.position.x / gridElementPixelWidth ,player.position.y / gridElementPixelHeight };
-
-					player.destinationGrid.x += 1;
-					player.destinationGrid.y += 1;
-
-					player.currentGrid.x += 1;
-					player.currentGrid.y += 1;
-
-					if (grid[player.destinationGrid.y][player.destinationGrid.x] != 255)
-					{
-						grid[player.destinationGrid.y][player.destinationGrid.x] = 1;
-					}
-					GrassfireAlgorithm();
-					SetArraySides();
+					SDL_GetMouseState(&mousePos.x, &mousePos.y);
 				}
 			}
 		}
@@ -412,56 +436,7 @@ int main()
 		//calculating deltaTime
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
-		//uchar destination = grid[player.destinationGrid.y][player.destinationGrid.x];
-		//uchar playerPos = grid[player.currentGrid.y][player.currentGrid.x];
-		//uchar down = grid[player.currentGrid.y + 1][player.currentGrid.x];
-		//uchar up = grid[player.currentGrid.y - 1][player.currentGrid.x];
-		//uchar right = grid[player.currentGrid.y][player.currentGrid.x + 1];
-		//uchar left = grid[player.currentGrid.y][player.currentGrid.x - 1];
-
-		//if (destination != 255)
-		//{
-		//	if (playerPos > up)
-		//	{
-		//		if (player.position.y - gridElementPixelHeight >= gridElementPixelHeight / 2)
-		//		{
-		//			player.position.y -= gridElementPixelHeight;
-		//			player.currentGrid.y -= 1;
-		//		}
-		//		Sleep(150);
-		//	}
-		//	else if (playerPos > down)
-		//	{
-		//		if (player.position.y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
-		//		{;
-		//		player.position.y += gridElementPixelHeight;
-		//		player.currentGrid.y += 1;
-		//		}
-		//		Sleep(150);
-		//	}
-
-		//	if (playerPos > left)
-		//	{
-		//		if (player.position.x - gridElementPixelWidth >= gridElementPixelWidth / 2)
-		//		{
-		//			player.position.x -= gridElementPixelWidth;
-		//			player.currentGrid.x -= 1;
-		//		}
-		//		Sleep(150);
-		//	}
-		//	else if (playerPos > right)
-		//	{
-		//		if (player.position.x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
-		//		{
-		//			player.position.x += gridElementPixelWidth;
-		//			player.currentGrid.x += 1;
-
-		//		}
-		//		Sleep(150);
-		//	}
-		//}
-
-		player.Move();
+		player.Move(MouseToGridPos(mousePos));
 
 		// Here is the rectangle where the image will be on the screen
 		SDL_Rect rect;
@@ -469,14 +444,17 @@ int main()
 		SDL_Rect rect2;
 		SDL_Rect rect3;
 		SDL_Rect rect4;
+		SDL_Rect enemyRect;
 
 		SetRect(&rect, player.position);
+		SetRect(&enemyRect, enemy.position);
 		SetRect(&rect1, obstacle1.position);
 		SetRect(&rect2, obstacle2.position);
 		SetRect(&rect3, obstacle3.position);
 		SetRect(&rect4, obstacle4.position);
 
 		DrawImage(renderer, player.texture, rect);
+		DrawImage(renderer, enemy.texture, enemyRect);
 		DrawImage(renderer, obstacle1.texture, rect1);
 		DrawImage(renderer, obstacle2.texture, rect2);
 		DrawImage(renderer, obstacle3.texture, rect3);
