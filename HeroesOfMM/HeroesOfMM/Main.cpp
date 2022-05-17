@@ -349,7 +349,7 @@ bool InitSDL(SDL_Renderer** renderer, SDL_Window** window)
 		return false;
 
 	// Setting the color of an empty window (RGBA). You are free to adjust it.
-	SDL_SetRenderDrawColor(*renderer, 11, 22, 33, 255);
+	SDL_SetRenderDrawColor(*renderer, 153, 255, 102, 255);
 
 	return true;
 }
@@ -369,8 +369,7 @@ int GetRandom15()
 int main()
 {
 	srand(time(nullptr)); // Initializing the seed of the random generator with current time
-
-	Vector2i mousePos = { 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
+	Vector2i mousePos = { 0, 0 };
 
 	SDL_Event sdlEvent;
 	SDL_Renderer* renderer = nullptr;
@@ -382,13 +381,28 @@ int main()
 		return -1;
 	}
 
-	Character player({ 15,11 }, surface, renderer, "spaceship.png");
-	Character enemy({ 3,3 }, surface, renderer, "star-wars.png");
+	Character horseRider({ 1,2 }, surface, renderer, "horseRider.png");
+	Character jester({ 1,3 }, surface, renderer, "jester.png");
+	Character executioner({ 1,4 }, surface, renderer, "executioner.png");
+	Character king({ 1,5 }, surface, renderer, "king.png");
+	Character queen({ 1,6 }, surface, renderer, "queen.png");
+	Character wizard({ 1,7 }, surface, renderer, "wizard.png");
+	Character dragon({ 1,8 }, surface, renderer, "dragon.png");
+	Character soldier({ 1,9 }, surface, renderer, "soldier.png");
 
-	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
-	Obstacle obstacle2({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
-	Obstacle obstacle3({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
-	Obstacle obstacle4({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
+	Character centaur({ 15,2 }, surface, renderer, "centaur.png");
+	Character cthulhu({ 15,3 }, surface, renderer, "cthulhu.png");
+	Character cyclops({ 15,4 }, surface, renderer, "cyclops.png");
+	Character griffin({ 15,5 }, surface, renderer, "griffin.png");
+	Character minotaur({ 15,6 }, surface, renderer, "minotaur.png");
+	Character troll({ 15,7 }, surface, renderer, "troll.png");
+	Character werewolf({ 15,8 }, surface, renderer, "werewolf.png");
+	Character snake({ 15,9 }, surface, renderer, "snake.png");
+
+	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
+	Obstacle obstacle2({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
+	Obstacle obstacle3({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
+	Obstacle obstacle4({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
 
 
 	SDL_FreeSurface(surface);
@@ -452,29 +466,77 @@ int main()
 		//calculating deltaTime
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
-		player.Move(MouseToGridPos(mousePos));
+		//player.Move(MouseToGridPos(mousePos));
 
 		// Here is the rectangle where the image will be on the screen
-		SDL_Rect rect;
-		SDL_Rect rect1;
-		SDL_Rect rect2;
-		SDL_Rect rect3;
-		SDL_Rect rect4;
-		SDL_Rect enemyRect;
+		SDL_Rect rectDragon;
+		SDL_Rect rectExecutioner;
+		SDL_Rect rectHorseRider;
+		SDL_Rect rectJester;
+		SDL_Rect rectKing;
+		SDL_Rect rectQueen;
+		SDL_Rect rectSoldier;
+		SDL_Rect rectWizard;
 
-		SetRect(&rect, player.position);
-		SetRect(&enemyRect, enemy.position);
-		SetRect(&rect1, obstacle1.position);
-		SetRect(&rect2, obstacle2.position);
-		SetRect(&rect3, obstacle3.position);
-		SetRect(&rect4, obstacle4.position);
+		SDL_Rect rectCentaur;
+		SDL_Rect rectCthulu;
+		SDL_Rect rectCyclops;
+		SDL_Rect rectGriffin;
+		SDL_Rect rectMinotaur;
+		SDL_Rect rectTroll;
+		SDL_Rect rectWerewolf;
+		SDL_Rect rectSnake;
 
-		DrawImage(renderer, player.texture, rect);
-		DrawImage(renderer, enemy.texture, enemyRect);
-		DrawImage(renderer, obstacle1.texture, rect1);
-		DrawImage(renderer, obstacle2.texture, rect2);
-		DrawImage(renderer, obstacle3.texture, rect3);
-		DrawImage(renderer, obstacle4.texture, rect4);
+		SDL_Rect rectObstacle1;
+		SDL_Rect rectObstacle2;
+		SDL_Rect rectObstacle3;
+		SDL_Rect rectObstacle4;
+
+		SetRect(&rectDragon, dragon.position);
+		SetRect(&rectExecutioner, executioner.position);
+		SetRect(&rectHorseRider, horseRider.position);
+		SetRect(&rectJester, jester.position);
+		SetRect(&rectKing, king.position);
+		SetRect(&rectQueen, queen.position);
+		SetRect(&rectSoldier, soldier.position);
+		SetRect(&rectWizard, wizard.position);
+
+		SetRect(&rectCentaur, centaur.position);
+		SetRect(&rectCthulu, cthulhu.position);
+		SetRect(&rectCyclops, cyclops.position);
+		SetRect(&rectGriffin, griffin.position);
+		SetRect(&rectMinotaur, minotaur.position);
+		SetRect(&rectTroll, troll.position);
+		SetRect(&rectWerewolf, werewolf.position);
+		SetRect(&rectSnake, snake.position);
+
+		SetRect(&rectObstacle1, obstacle1.position);
+		SetRect(&rectObstacle2, obstacle2.position);
+		SetRect(&rectObstacle3, obstacle3.position);
+		SetRect(&rectObstacle4, obstacle4.position);
+
+		DrawImage(renderer, dragon.texture, rectDragon);
+		DrawImage(renderer, executioner.texture, rectExecutioner);
+		DrawImage(renderer, horseRider.texture, rectHorseRider);
+		DrawImage(renderer, jester.texture, rectJester);
+		DrawImage(renderer, king.texture, rectKing);
+		DrawImage(renderer, queen.texture, rectQueen);
+		DrawImage(renderer, soldier.texture, rectSoldier);
+		DrawImage(renderer, wizard.texture, rectWizard);
+
+		DrawImage(renderer, centaur.texture, rectCentaur);
+		DrawImage(renderer, cthulhu.texture, rectCthulu);
+		DrawImage(renderer, cyclops.texture, rectCyclops);
+		DrawImage(renderer, griffin.texture, rectGriffin);
+		DrawImage(renderer, minotaur.texture, rectMinotaur);
+		DrawImage(renderer, troll.texture, rectTroll);
+		DrawImage(renderer, werewolf.texture, rectWerewolf);
+		DrawImage(renderer, snake.texture, rectSnake);
+
+		DrawImage(renderer, obstacle1.texture, rectObstacle1);
+		DrawImage(renderer, obstacle2.texture, rectObstacle2);
+		DrawImage(renderer, obstacle3.texture, rectObstacle3);
+		DrawImage(renderer, obstacle4.texture, rectObstacle4);
 
 		// Showing the screen to the player
 		SDL_RenderPresent(renderer);
