@@ -121,13 +121,20 @@ struct Character
 	Vector2i position;
 	Vector2i currentGrid;
 
-	Character(SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath, Vector2i pos);
+	Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath);
+	void PlaceCharacter(Vector2i pos);
 	void Move(Vector2i destinationGrid);
 };
 
-Character::Character(SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath, Vector2i pos)
+void Character::PlaceCharacter(Vector2i pos)
 {
-	position = pos;
+	position.x = (pos.x - 1) * gridElementPixelWidth + gridElementPixelWidth / 2;
+	position.y = (pos.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
+}
+
+Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath)
+{
+	PlaceCharacter(pos);
 	texture = SetTexture(sur, rend, imagePath);
 }
 
@@ -361,14 +368,8 @@ int main()
 		return -1;
 	}
 
-	Character player(surface, renderer, "spaceship.png", Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight });
-	//player.texture = SetTexture(surface, renderer, "spaceship.png");
-	//player.position = Vector2i{ 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
-
-	Character enemy(surface, renderer, "star-wars.png", Vector2i{ 960,  0 + 5 * gridElementPixelHeight / 2 + gridElementPixelHeight });
-	//enemy.texture = SetTexture(surface, renderer, "star-wars.png");
-	//enemy.position = Vector2i{ 960,  0 + 5*gridElementPixelHeight / 2 + gridElementPixelHeight };
-
+	Character player({ 15,11 }, surface, renderer, "spaceship.png");
+	Character enemy({ 3,3 }, surface, renderer, "star-wars.png");
 
 	Obstacle obstacle1({3,10}, surface, renderer, "star-wars.png");
 	Obstacle obstacle2({9,9}, surface, renderer, "star-wars.png");
