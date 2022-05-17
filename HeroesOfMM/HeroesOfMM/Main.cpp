@@ -366,6 +366,26 @@ int GetRandom15()
 	return random;
 }
 
+enum Chracters
+{
+	horseRider,
+	jester,
+	executioner,
+	king,
+	queen,
+	wizard,
+	dragon,
+	soldier,
+	centaur,
+	cthulhu,
+	cyclops,
+	griffin,
+	minotaur,
+	troll,
+	werewolf,
+	snake
+};
+
 int main()
 {
 	srand(time(nullptr)); // Initializing the seed of the random generator with current time
@@ -467,6 +487,10 @@ int main()
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
 		//player.Move(MouseToGridPos(mousePos));
+
+
+
+
 
 		// Here is the rectangle where the image will be on the screen
 		SDL_Rect rectDragon;
