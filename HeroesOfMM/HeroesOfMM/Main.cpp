@@ -354,8 +354,22 @@ bool InitSDL(SDL_Renderer** renderer, SDL_Window** window)
 	return true;
 }
 
+int GetRandom11()
+{
+	int random = (rand() % (10 - 2 + 1)) + 2;
+	return random;
+}
+
+int GetRandom15()
+{
+	int random = (rand() % (13 - 3 + 1)) + 3;
+	return random;
+}
+
 int main()
 {
+	srand(time(nullptr)); // Initializing the seed of the random generator with current time
+
 	Vector2i mousePos = { 960,  0 + gridElementPixelHeight / 2 + gridElementPixelHeight };
 
 	SDL_Event sdlEvent;
@@ -371,10 +385,11 @@ int main()
 	Character player({ 15,11 }, surface, renderer, "spaceship.png");
 	Character enemy({ 3,3 }, surface, renderer, "star-wars.png");
 
-	Obstacle obstacle1({3,10}, surface, renderer, "star-wars.png");
-	Obstacle obstacle2({9,9}, surface, renderer, "star-wars.png");
-	Obstacle obstacle3({3,4}, surface, renderer, "star-wars.png");
-	Obstacle obstacle4({5,7}, surface, renderer, "star-wars.png");
+	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
+	Obstacle obstacle2({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
+	Obstacle obstacle3({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
+	Obstacle obstacle4({ GetRandom15(), GetRandom11() }, surface, renderer, "star-wars.png");
+
 
 	SDL_FreeSurface(surface);
 

@@ -1,4 +1,5 @@
 ﻿  Main.cpp
+C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\Main.cpp(371,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   HeroesOfMM.vcxproj -> C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\x64\Debug\HeroesOfMM.exe
   C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\\SDL2\lib\dll\libpng16-16.dll
   C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\\SDL2\lib\dll\SDL2.dll
