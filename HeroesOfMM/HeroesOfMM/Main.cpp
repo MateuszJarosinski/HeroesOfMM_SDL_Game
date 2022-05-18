@@ -236,15 +236,6 @@ void Obstacle::PlaceObstacle()
 	position.y = (position.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
 }
 
-void SetObstaclePlacement()
-{
-	//position on grid is: position += 1
-	//battlefield[10][3] = 255;
-	//battlefield[9][9] = 255;
-	//battlefield[4][3] = 255;
-	//battlefield[7][5] = 255;
-}
-
 uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
 {
 	*tickTime = SDL_GetTicks();
@@ -363,7 +354,7 @@ bool InitSDL(SDL_Renderer** renderer, SDL_Window** window)
 
 int GetRandom11()
 {
-	int random = (rand() % (10 - 2 + 1)) + 2;
+	int random = (rand() % (9 - 2 + 1)) + 2;
 	return random;
 }
 
@@ -373,25 +364,20 @@ int GetRandom15()
 	return random;
 }
 
-enum Chracters
+Vector2i GetRandomGrid()
 {
-	horseRider,
-	centaur,
-	jester,
-	cthulhu,
-	executioner,
-	cyclops,
-	king,
-	griffin,
-	queen,
-	minotaur,
-	wizard,
-	troll,
-	dragon,
-	werewolf,
-	soldier,
-	snake
-};
+	int randomX = GetRandom11();
+	int randomY = GetRandom11();
+	if (battlefield[randomX][randomY] != 255)
+	{
+		Vector2i vector = { randomX, randomY };
+		return vector;
+	}
+	else
+	{
+		GetRandomGrid();
+	}
+}
 
 void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos)
 {
@@ -408,12 +394,12 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 			*aiIsMoving = true;
 			//printf("check");
 			SetAllGridElementsToZero();
-			SetObstaclePlacement();
+			battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
 		}
 	}
 	if (*playerFinishMove && *aiIsMoving)
 	{
-		aiCharacter->Move({ GetRandom11(), GetRandom11() });
+		aiCharacter->Move(GetRandomGrid());
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
 			aiCharacter->destinationGrid.x = 0;
@@ -421,7 +407,7 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 			*aiIsMoving = false;
 			//printf("check");
 			SetAllGridElementsToZero();
-			SetObstaclePlacement();
+			battlefield[aiCharacter->currentGrid.y][aiCharacter->currentGrid.x] = 255;
 			*tour = nextTour;
 		}
 	}
@@ -456,10 +442,6 @@ int main()
 	Character dragon({ 1,8 }, surface, renderer, "dragon.png");
 	Character soldier({ 1,9 }, surface, renderer, "soldier.png");
 
-	Character playerCharacters[]{
-	horseRider, jester, executioner, king, queen, wizard, dragon, soldier
-	};
-
 	Character centaur({ 15,2 }, surface, renderer, "centaur.png");
 	Character cthulhu({ 15,3 }, surface, renderer, "cthulhu.png");
 	Character cyclops({ 15,4 }, surface, renderer, "cyclops.png");
@@ -469,8 +451,8 @@ int main()
 	Character werewolf({ 15,8 }, surface, renderer, "werewolf.png");
 	Character snake({ 15,9 }, surface, renderer, "snake.png");
 
-	Character aiCharacters[]{
-	centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake
+	Character allCharacters[]{
+	centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake, centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake
 	};
 
 	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
@@ -524,9 +506,12 @@ int main()
 				if (sdlEvent.button.button == SDL_BUTTON_RIGHT)
 				{
 					playerIsMoving = true;
-					SetObstaclePlacement();
 					SetAllGridElementsToZero();
 					//SetObstaclePlacement();
+					//for (int i = 0; i < 16; i++)
+					//{
+					//	battlefield[allCharacters[i].position.x + 1][allCharacters[i].position.y + 1] = 255;
+					//}
 
 					SDL_GetMouseState(&mousePos.x, &mousePos.y);
 					PrintArray();
@@ -536,14 +521,7 @@ int main()
 
 		// Clearing the screen
 		SDL_RenderClear(renderer);
-		// All drawing goes here
 
-		// Let's draw a sample image
-
-		//calculating deltaTime
-		deltaTime = DeltaTime(&lastTickTime, &tickTime);
-
-		//player.Move(MouseToGridPos(mousePos));
 		switch (tour)
 		{
 		case 0:
@@ -573,8 +551,6 @@ int main()
 		default:
 			break;
 		}
-
-		printf("round %i\n", tour);
 
 		// Here is the rectangle where the image will be on the screen
 		SDL_Rect rectDragon;
