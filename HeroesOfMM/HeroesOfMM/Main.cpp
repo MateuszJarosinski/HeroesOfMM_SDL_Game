@@ -120,10 +120,11 @@ struct Character
 	SDL_Texture* texture;
 	Vector2i position;
 	Vector2i currentGrid;
+	Vector2i destinationGrid;
 
 	Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath);
 	void PlaceCharacter(Vector2i pos);
-	void Move(Vector2i destinationGrid);
+	void Move(Vector2i dest);
 };
 
 void Character::PlaceCharacter(Vector2i pos)
@@ -135,11 +136,13 @@ void Character::PlaceCharacter(Vector2i pos)
 Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath)
 {
 	PlaceCharacter(pos);
+	battlefield[MouseToGridPos(position).y + 1][MouseToGridPos(position).x + 1] = 255;
 	texture = SetTexture(sur, rend, imagePath);
 }
 
-void Character::Move(Vector2i destinationGrid)
+void Character::Move(Vector2i dest)
 {
+	destinationGrid = dest;
 	currentGrid = { position.x / gridElementPixelWidth ,position.y / gridElementPixelHeight };
 	destinationGrid.x += 1;
 	destinationGrid.y += 1;
@@ -223,6 +226,7 @@ Obstacle::Obstacle(Vector2i pos, SDL_Surface* surface, SDL_Renderer* renderer, c
 {
 	position = pos;
 	PlaceObstacle();
+	battlefield[MouseToGridPos(position).y + 1][MouseToGridPos(position).x + 1] = 255;
 	texture = SetTexture(surface, renderer, imagePath);
 }
 
@@ -230,6 +234,15 @@ void Obstacle::PlaceObstacle()
 {
 	position.x = (position.x - 1) * gridElementPixelWidth + gridElementPixelWidth / 2;
 	position.y = (position.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
+}
+
+void SetObstaclePlacement()
+{
+	//position on grid is: position += 1
+	//battlefield[10][3] = 255;
+	//battlefield[9][9] = 255;
+	//battlefield[4][3] = 255;
+	//battlefield[7][5] = 255;
 }
 
 uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
@@ -246,18 +259,12 @@ void SetAllGridElementsToZero()
 	{
 		for(int j = 0; j < 17; j++)
 		{
-			battlefield[i][j] = 0;
+			if (battlefield[i][j] != 255)
+			{
+				battlefield[i][j] = 0;
+			}
 		}
 	}
-}
-
-void SetObstaclePlacement()
-{
-	//position on grid is: position += 1
-	battlefield[10][3] = 255;
-	battlefield[9][9] = 255;
-	battlefield[4][3] = 255;
-	battlefield[7][5] = 255;
 }
 
 void PrintArray()
@@ -369,25 +376,64 @@ int GetRandom15()
 enum Chracters
 {
 	horseRider,
-	jester,
-	executioner,
-	king,
-	queen,
-	wizard,
-	dragon,
-	soldier,
 	centaur,
+	jester,
 	cthulhu,
+	executioner,
 	cyclops,
+	king,
 	griffin,
+	queen,
 	minotaur,
+	wizard,
 	troll,
+	dragon,
 	werewolf,
+	soldier,
 	snake
 };
 
+void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos)
+{
+	printf("playerIsMoving %i\n", *playerIsMoving);
+	if (*playerIsMoving)
+	{
+		playerCharacter->Move(MouseToGridPos(mousePos));
+		if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
+		{
+			playerCharacter->destinationGrid.x = 0;
+			playerCharacter->destinationGrid.y = 0;
+			*playerIsMoving = false;
+			*playerFinishMove = true;
+			*aiIsMoving = true;
+			//printf("check");
+			SetAllGridElementsToZero();
+			SetObstaclePlacement();
+		}
+	}
+	if (*playerFinishMove && *aiIsMoving)
+	{
+		aiCharacter->Move({ GetRandom11(), GetRandom11() });
+		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
+		{
+			aiCharacter->destinationGrid.x = 0;
+			aiCharacter->destinationGrid.y = 0;
+			*aiIsMoving = false;
+			//printf("check");
+			SetAllGridElementsToZero();
+			SetObstaclePlacement();
+			*tour = nextTour;
+		}
+	}
+}
+
 int main()
 {
+	int tour = 0;
+	bool playerIsMoving = false;
+	bool playerFinishMove = false;
+	bool aiIsMoving = false;
+
 	srand(time(nullptr)); // Initializing the seed of the random generator with current time
 	Vector2i mousePos = { 0, 0 };
 
@@ -410,6 +456,10 @@ int main()
 	Character dragon({ 1,8 }, surface, renderer, "dragon.png");
 	Character soldier({ 1,9 }, surface, renderer, "soldier.png");
 
+	Character playerCharacters[]{
+	horseRider, jester, executioner, king, queen, wizard, dragon, soldier
+	};
+
 	Character centaur({ 15,2 }, surface, renderer, "centaur.png");
 	Character cthulhu({ 15,3 }, surface, renderer, "cthulhu.png");
 	Character cyclops({ 15,4 }, surface, renderer, "cyclops.png");
@@ -418,6 +468,10 @@ int main()
 	Character troll({ 15,7 }, surface, renderer, "troll.png");
 	Character werewolf({ 15,8 }, surface, renderer, "werewolf.png");
 	Character snake({ 15,9 }, surface, renderer, "snake.png");
+
+	Character aiCharacters[]{
+	centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake
+	};
 
 	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
 	Obstacle obstacle2({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
@@ -469,10 +523,13 @@ int main()
 			{
 				if (sdlEvent.button.button == SDL_BUTTON_RIGHT)
 				{
-					SetAllGridElementsToZero();
+					playerIsMoving = true;
 					SetObstaclePlacement();
+					SetAllGridElementsToZero();
+					//SetObstaclePlacement();
 
 					SDL_GetMouseState(&mousePos.x, &mousePos.y);
+					PrintArray();
 				}
 			}
 		}
@@ -487,10 +544,37 @@ int main()
 		deltaTime = DeltaTime(&lastTickTime, &tickTime);
 
 		//player.Move(MouseToGridPos(mousePos));
+		switch (tour)
+		{
+		case 0:
+			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos);
+			break;
+		case 1:
+			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos);
+			break;
+		case 2:
+			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos);
+			break;
+		case 3:
+			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos);
+			break;
+		case 4:
+			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos);
+			break;
+		case 5:
+			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos);
+			break;
+		case 6:
+			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos);
+			break;
+		case 7:
+			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos);
+			break;
+		default:
+			break;
+		}
 
-
-
-
+		printf("round %i\n", tour);
 
 		// Here is the rectangle where the image will be on the screen
 		SDL_Rect rectDragon;
