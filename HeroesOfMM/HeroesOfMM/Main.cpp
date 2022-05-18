@@ -115,6 +115,33 @@ void SetArraySides()
 	}
 }
 
+void SetAllGridElementsToZero()
+{
+	for (int i = 0; i < 13; i++)
+	{
+		for (int j = 0; j < 17; j++)
+		{
+			if (battlefield[i][j] != 255)
+			{
+				battlefield[i][j] = 0;
+			}
+		}
+	}
+}
+
+void PrintArray()
+{
+	for (int rows = 0; rows < 13; rows++)
+	{
+		for (int columns = 0; columns < 17; columns++)
+		{
+			printf("%d  ", battlefield[rows][columns]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
+
 struct Character
 {
 	SDL_Texture* texture;
@@ -242,35 +269,6 @@ uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
 	*lastTickTime = *tickTime;
 	return deltaTime;
 }
-
-void SetAllGridElementsToZero()
-{
-	for (int i = 0; i < 13; i++)
-	{
-		for(int j = 0; j < 17; j++)
-		{
-			if (battlefield[i][j] != 255)
-			{
-				battlefield[i][j] = 0;
-			}
-		}
-	}
-}
-
-void PrintArray()
-{
-	for (int rows = 0; rows < 13; rows++)
-	{
-		for (int columns = 0; columns < 17; columns++)
-		{
-			printf("%d  ", battlefield[rows][columns]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
-
-
 
 SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath)
 {
