@@ -162,7 +162,6 @@ void Character::Move(Vector2i dest)
 	uchar left = battlefield[currentGrid.y][currentGrid.x - 1];
 
 	GrassfireAlgorithm();
-	SetArraySides();
 
 	if (destination != 255)
 	{
@@ -381,7 +380,6 @@ Vector2i GetRandomGrid()
 
 void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos)
 {
-	printf("playerIsMoving %i\n", *playerIsMoving);
 	if (*playerIsMoving)
 	{
 		playerCharacter->Move(MouseToGridPos(mousePos));
@@ -471,6 +469,8 @@ int main()
 
 	int texWidth = gridElementPixelWidth;
 	int texHeight = gridElementPixelHeight;
+
+	SetArraySides();
 
 	// The main loop
 	// Every iteration is a frame
