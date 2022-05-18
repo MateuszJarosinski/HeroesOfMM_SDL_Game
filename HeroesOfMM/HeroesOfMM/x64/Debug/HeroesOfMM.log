@@ -1,7 +1,6 @@
 ﻿  Main.cpp
-C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\Main.cpp(419,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\Main.cpp(377): warning C4715: 'GetRandomGrid': not all control paths return a value
-  LINK : C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\x64\Debug\HeroesOfMM.exe not found or not built by the last incremental link; performing full link
+C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\Main.cpp(424,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\Main.cpp(379): warning C4715: 'GetRandomGrid': not all control paths return a value
   HeroesOfMM.vcxproj -> C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\x64\Debug\HeroesOfMM.exe
   C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\\SDL2\lib\dll\libpng16-16.dll
   C:\Repositories\HeroesOfMM_SDL_Game\HeroesOfMM\HeroesOfMM\\SDL2\lib\dll\SDL2.dll
