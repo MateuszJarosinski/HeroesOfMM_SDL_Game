@@ -1,5 +1,5 @@
 /x64/Debug/HeroesOfMM.exe
 *.pdb
-/.vs
+.vs
 /HeroesOfMM/x64
 /HeroesOfMM/HeroesOfMM/x64
