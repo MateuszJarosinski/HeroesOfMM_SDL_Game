@@ -153,13 +153,13 @@ struct Character
 	Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath);
 	void PlaceCharacter(Vector2i pos);
 	void Move(Vector2i dest);
-	void UpdateLastPosition();
+	//void UpdateLastPosition();
 };
 
-void Character::UpdateLastPosition()
-{
-	pastGrid = currentGrid;
-}
+//void Character::UpdateLastPosition()
+//{
+//	pastGrid = currentGrid;
+//}
 
 void Character::PlaceCharacter(Vector2i pos)
 {
@@ -205,7 +205,10 @@ void Character::Move(Vector2i dest)
 			if (position.y - gridElementPixelHeight >= gridElementPixelHeight / 2)
 			{
 				position.y -= gridElementPixelHeight;
+				pastGrid.y = currentGrid.y;
 				currentGrid.y -= 1;
+				battlefield[pastGrid.y][currentGrid.x] = 200;
+				//battlefield[currentGrid.y][currentGrid.x] = 200;
 			}
 			Sleep(150);
 		}
@@ -214,7 +217,10 @@ void Character::Move(Vector2i dest)
 			if (position.y + gridElementPixelHeight <= (screenHeight - gridElementPixelHeight / 2))
 			{
 				position.y += gridElementPixelHeight;
+				pastGrid.y = currentGrid.y;
 				currentGrid.y += 1;
+				battlefield[pastGrid.y][currentGrid.x] = 200;
+				//battlefield[currentGrid.y][currentGrid.x] = 200;
 			}
 			Sleep(150);
 		}
@@ -223,7 +229,10 @@ void Character::Move(Vector2i dest)
 			if (position.x - gridElementPixelWidth >= gridElementPixelWidth / 2)
 			{
 				position.x -= gridElementPixelWidth;
+				pastGrid.x = currentGrid.x;
 				currentGrid.x -= 1;
+				battlefield[currentGrid.y][pastGrid.x] = 200;
+				//battlefield[currentGrid.y][currentGrid.x] = 200;
 			}
 			Sleep(150);
 		}
@@ -232,8 +241,10 @@ void Character::Move(Vector2i dest)
 			if (position.x + gridElementPixelWidth <= (screenWidth - gridElementPixelWidth / 2))
 			{
 				position.x += gridElementPixelWidth;
+				pastGrid.x = currentGrid.x;
 				currentGrid.x += 1;
-
+				battlefield[currentGrid.y][pastGrid.x] = 200;
+				//battlefield[currentGrid.y][currentGrid.x] = 200;
 			}
 			Sleep(150);
 		}
@@ -382,9 +393,9 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 {
 	if (*playerIsMoving)
 	{
-		playerCharacter->UpdateLastPosition();
+		//playerCharacter->UpdateLastPosition();
 		playerCharacter->Move(MouseToGridPos(mousePos));
-		battlefield[playerCharacter->pastGrid.y][playerCharacter->pastGrid.x] = 200;
+		//battlefield[playerCharacter->pastGrid.y][playerCharacter->pastGrid.x] = 200;
 		if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
 		{
 			playerCharacter->destinationGrid.x = 0;
@@ -398,9 +409,9 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	}
 	if (*playerFinishMove && *aiIsMoving)
 	{
-		aiCharacter->UpdateLastPosition();
+		//aiCharacter->UpdateLastPosition();
 		aiCharacter->Move(GetRandomGrid());
-		battlefield[aiCharacter->pastGrid.x][aiCharacter->pastGrid.y] = 200;
+		//battlefield[aiCharacter->pastGrid.x][aiCharacter->pastGrid.y] = 200;
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
 			aiCharacter->destinationGrid.x = 0;
@@ -512,7 +523,7 @@ int main()
 					SetAllGridElementsToZero();
 
 					SDL_GetMouseState(&mousePos.x, &mousePos.y);
-					PrintArray();
+					//PrintArray();
 				}
 			}
 		}
