@@ -9,8 +9,8 @@
 
 SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath);
 
-const char fontPath[] = "OdibeeSans-Regular.ttf";
-const int fontSize = 42;
+//const char fontPath[] = "OdibeeSans-Regular.ttf";
+//const int fontSize = 42;
 
 typedef unsigned char uchar;
 
@@ -442,9 +442,9 @@ int main()
 	SDL_Window* window = nullptr;
 	SDL_Surface* surface = nullptr;
 
-	SDL_Texture* textTexture = nullptr;
-	SDL_Surface* textSurface = nullptr;
-	TTF_Font* font = GetFont();
+	//SDL_Texture* textTexture = nullptr;
+	//SDL_Surface* textSurface = nullptr;
+	//TTF_Font* font = GetFont();
 
 	bool initSDLResult = InitSDL(&renderer, &window);
 	if (!initSDLResult)
@@ -452,8 +452,8 @@ int main()
 		return -1;
 	}
 
-	textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
-	textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+	//textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
+	//textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
 	Character horseRider({ 1,2 }, surface, renderer, "horseRider.png");
 	Character jester({ 1,3 }, surface, renderer, "jester.png");
@@ -640,10 +640,10 @@ int main()
 		DrawImage(renderer, obstacle3.texture, rectObstacle3);
 		DrawImage(renderer, obstacle4.texture, rectObstacle4);
 
-		textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
-		textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-		SDL_Rect textRect = { 0, 0, textSurface->w, textSurface->h };
-		SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+		//textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
+		//textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+		//SDL_Rect textRect = { 0, 0, textSurface->w, textSurface->h };
+		//SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
 
 		// Showing the screen to the player
 		SDL_RenderPresent(renderer);
@@ -653,8 +653,8 @@ int main()
 	// If we reached here then the main loop stoped
 	// That means the game wants to quit
 
-	SDL_DestroyTexture(textTexture);
-	SDL_FreeSurface(textSurface);
+	//SDL_DestroyTexture(textTexture);
+	//SDL_FreeSurface(textSurface);
 	// Shutting down the renderer
 	SDL_DestroyRenderer(renderer);
 
