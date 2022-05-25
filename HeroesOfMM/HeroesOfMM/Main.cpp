@@ -277,16 +277,16 @@ uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
 	return deltaTime;
 }
 
-TTF_Font* GetFont()
-{
-	if (TTF_Init() < 0)
-		abort();
-	TTF_Font* font = TTF_OpenFont(fontPath, fontSize);
-	if (font)
-		return font;
-	else
-		abort();
-}
+//TTF_Font* GetFont()
+//{
+//	if (TTF_Init() < 0)
+//		abort();
+//	TTF_Font* font = TTF_OpenFont(fontPath, fontSize);
+//	if (font)
+//		return font;
+//	else
+//		abort();
+//}
 
 SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath)
 {
