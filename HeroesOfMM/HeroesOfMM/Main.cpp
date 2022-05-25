@@ -174,10 +174,6 @@ Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const c
 
 void Character::Move(Vector2i dest)
 {
-	int quantity;
-	int health;
-	int attackDamage;
-
 	destinationGrid = dest;
 	currentGrid = { position.x / gridElementPixelWidth ,position.y / gridElementPixelHeight };
 	destinationGrid.x += 1;
@@ -398,43 +394,9 @@ Vector2i GetRandomGrid()
 	}
 }
 
-int AIFindPlayerEnemy()
+void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos)
 {
-	int random = rand() % (7+1 - 0) + 0;
-
-	return random;
-}
-
-Vector2i SetAIDestination(Vector2i target)
-{
-	if (battlefield[target.y][target.x] = 200)
-	{
-		if (battlefield[target.y][target.x + 1] != 200 && battlefield[target.y][target.x + 1] != 255)
-		{
-			return Vector2i{ target.y, target.x + 1};
-		}
-		else if (battlefield[target.y][target.x - 1] != 200 && battlefield[target.y][target.x - 1] != 255)
-		{
-			return Vector2i{ target.y, target.x - 1 };
-		}
-		else if (battlefield[target.y + 1][target.x] != 200 && battlefield[target.y + 1][target.x] != 255)
-		{
-			return Vector2i{ target.y + 1, target.x };
-		}
-		else if (battlefield[target.y - 1][target.x] != 200 && battlefield[target.y - 1][target.x] != 255)
-		{
-			return Vector2i{ target.y - 1, target.x };
-		}
-	}
-}
-
-void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget)
-{
-	//aiTarget->currentGrid;
-	/*printf("f = %i \n", aiTarget->currentGrid.x);
-	printf("f = %i \n", aiTarget->currentGrid.y);
-	printf("\n");
-	if (*playerIsMoving)*/
+	if (*playerIsMoving)
 	{
 		playerCharacter->Move(MouseToGridPos(mousePos));
 
@@ -452,8 +414,6 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	if (*playerFinishMove && *aiIsMoving)
 	{
 		aiCharacter->Move(GetRandomGrid());
-		/*Character target = AIFindPlayerEnemy(aiTarget);
-		aiCharacter->Move(SetAIDestination(target.currentGrid));*/
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
@@ -469,15 +429,6 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 
 int main()
 {
-	int random1;
-	int random2;
-	int random3;
-	int random4;
-	int random5;
-	int random6;
-	int random7;
-	int random8;
-
 	int tour = 0;
 	bool playerIsMoving = false;
 	bool playerFinishMove = false;
@@ -491,9 +442,9 @@ int main()
 	SDL_Window* window = nullptr;
 	SDL_Surface* surface = nullptr;
 
-	//SDL_Texture* textTexture = nullptr;
-	//SDL_Surface* textSurface = nullptr;
-	//TTF_Font* font = GetFont();
+	SDL_Texture* textTexture = nullptr;
+	SDL_Surface* textSurface = nullptr;
+	TTF_Font* font = GetFont();
 
 	bool initSDLResult = InitSDL(&renderer, &window);
 	if (!initSDLResult)
@@ -501,8 +452,8 @@ int main()
 		return -1;
 	}
 
-	//textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
-	//textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+	textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
+	textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
 	Character horseRider({ 1,2 }, surface, renderer, "horseRider.png");
 	Character jester({ 1,3 }, surface, renderer, "jester.png");
@@ -522,8 +473,8 @@ int main()
 	Character werewolf({ 15,8 }, surface, renderer, "werewolf.png");
 	Character snake({ 15,9 }, surface, renderer, "snake.png");
 
-	Character* allCharacters[]{
-	&horseRider, &jester, &executioner, &king, &queen, &wizard, &dragon, &soldier
+	Character allCharacters[]{
+	centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake, centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake
 	};
 
 	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
@@ -589,48 +540,31 @@ int main()
 		// Clearing the screen
 		SDL_RenderClear(renderer);
 
-		/*Character* charPoint = nullptr;
-		charPoint = allCharacters[0];*/
-
-		//printf("%i\n", &allCharacters[0]);
-
-		if (tour == 0)
-		{
-			random1 = AIFindPlayerEnemy();
-			random2 = AIFindPlayerEnemy();
-			random3 = AIFindPlayerEnemy();
-			random4 = AIFindPlayerEnemy();
-			random5 = AIFindPlayerEnemy();
-			random6 = AIFindPlayerEnemy();
-			random7 = AIFindPlayerEnemy();
-			random8 = AIFindPlayerEnemy();
-		}
-
 		switch (tour)
 		{
 		case 0:
-			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, allCharacters[random1]);
+			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos);
 			break;
 		case 1:
-			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, allCharacters[random2]);
+			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos);
 			break;
 		case 2:
-			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, allCharacters[random3]);
+			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos);
 			break;
 		case 3:
-			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, allCharacters[random4]);
+			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos);
 			break;
 		case 4:
-			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, allCharacters[random5]);
+			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos);
 			break;
 		case 5:
-			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, allCharacters[random6]);
+			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos);
 			break;
 		case 6:
-			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, allCharacters[random7]);
+			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos);
 			break;
 		case 7:
-			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, allCharacters[random8]);
+			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos);
 			break;
 		default:
 			break;
@@ -706,10 +640,10 @@ int main()
 		DrawImage(renderer, obstacle3.texture, rectObstacle3);
 		DrawImage(renderer, obstacle4.texture, rectObstacle4);
 
-		//textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
-		//textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-		//SDL_Rect textRect = { 0, 0, textSurface->w, textSurface->h };
-		//SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+		textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
+		textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+		SDL_Rect textRect = { 0, 0, textSurface->w, textSurface->h };
+		SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
 
 		// Showing the screen to the player
 		SDL_RenderPresent(renderer);
@@ -719,8 +653,8 @@ int main()
 	// If we reached here then the main loop stoped
 	// That means the game wants to quit
 
-	//SDL_DestroyTexture(textTexture);
-	//SDL_FreeSurface(textSurface);
+	SDL_DestroyTexture(textTexture);
+	SDL_FreeSurface(textSurface);
 	// Shutting down the renderer
 	SDL_DestroyRenderer(renderer);
 
