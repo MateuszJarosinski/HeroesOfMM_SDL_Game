@@ -8,12 +8,10 @@
 #include "SDL2/SDL_ttf.h"
 #include <Windows.h>
 
-SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath);
+typedef unsigned char uchar;
 
 const char fontPath[] = "OdibeeSans-Regular.ttf";
 const int fontSize = 32;
-
-typedef unsigned char uchar;
 
 const int screenWidth = 1920;
 const int screenHeight = 1080;
@@ -27,6 +25,8 @@ const int gridElementPixelWidth = 128;
 //the board is 13/17 because I need space for the sides of the map (I need them later)
 //in practice the player plays on 11/15 map
 uchar battlefield[13][17];
+
+SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath);
 
 struct Vector2i
 {
@@ -172,6 +172,9 @@ struct Character
 
 	SDL_Texture* texture;
 	SDL_Texture* textTexture;
+
+	SDL_Rect rect;
+	SDL_Rect textRect;
 
 	Vector2i position;
 	Vector2i currentGrid = {0,0};
@@ -506,8 +509,12 @@ int main()
 	Character werewolf({ 15,8 }, surface, renderer, textSurface, "werewolf.png", font);
 	Character snake({ 15,9 }, surface, renderer, textSurface, "snake.png", font);
 
-	Character* allCharacters[]{
+	Character* playerCharacters[]{
 	&horseRider, &jester, &executioner, &king, &queen, &wizard, &dragon, &soldier
+	};
+
+	Character* aiCharacters[]{
+	&centaur, &cthulhu, &cyclops, &griffin, &minotaur, &troll, &werewolf, &snake
 	};
 
 	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
@@ -576,122 +583,45 @@ int main()
 		switch (tour)
 		{
 		case 0:
-			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, allCharacters[0]);
+			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[0]);
 			break;
 		case 1:
-			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, allCharacters[1]);
+			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[1]);
 			break;
 		case 2:
-			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, allCharacters[2]);
+			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[2]);
 			break;
 		case 3:
-			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, allCharacters[3]);
+			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[3]);
 			break;
 		case 4:
-			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, allCharacters[4]);
+			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[4]);
 			break;
 		case 5:
-			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, allCharacters[5]);
+			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[5]);
 			break;
 		case 6:
-			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, allCharacters[6]);
+			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[6]);
 			break;
 		case 7:
-			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, allCharacters[7]);
+			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[7]);
 			break;
 		default:
 			break;
 		}
 
-		// Here is the rectangle where the image will be on the screen
-		SDL_Rect textRect;
-		SDL_Rect rectDragon;
-		SDL_Rect rectExecutioner;
-		SDL_Rect rectHorseRider;
-		SDL_Rect rectJester;
-		SDL_Rect rectKing;
-		SDL_Rect rectQueen;
-		SDL_Rect rectSoldier;
-		SDL_Rect rectWizard;
+		for (int i = 0; i < 8; i++)
+		{
+			SetRect(&playerCharacters[i]->rect, playerCharacters[i]->position);
+			SetRect(&aiCharacters[i]->rect, aiCharacters[i]->position);
+			DrawImage(renderer, playerCharacters[i]->texture, playerCharacters[i]->rect);
+			DrawImage(renderer, aiCharacters[i]->texture, aiCharacters[i]->rect);
 
-		SDL_Rect rectCentaur;
-		SDL_Rect rectCthulu;
-		SDL_Rect rectCyclops;
-		SDL_Rect rectGriffin;
-		SDL_Rect rectMinotaur;
-		SDL_Rect rectTroll;
-		SDL_Rect rectWerewolf;
-		SDL_Rect rectSnake;
-
-		SDL_Rect rectObstacle1;
-		SDL_Rect rectObstacle2;
-		SDL_Rect rectObstacle3;
-		SDL_Rect rectObstacle4;
-
-		SetTextRect(&textRect, dragon.position);
-		SetRect(&rectDragon, dragon.position);
-		SetRect(&rectExecutioner, executioner.position);
-		SetRect(&rectHorseRider, horseRider.position);
-		SetRect(&rectJester, jester.position);
-		SetRect(&rectKing, king.position);
-		SetRect(&rectQueen, queen.position);
-		SetRect(&rectSoldier, soldier.position);
-		SetRect(&rectWizard, wizard.position);
-
-		SetRect(&rectCentaur, centaur.position);
-		SetRect(&rectCthulu, cthulhu.position);
-		SetRect(&rectCyclops, cyclops.position);
-		SetRect(&rectGriffin, griffin.position);
-		SetRect(&rectMinotaur, minotaur.position);
-		SetRect(&rectTroll, troll.position);
-		SetRect(&rectWerewolf, werewolf.position);
-		SetRect(&rectSnake, snake.position);
-
-		SetRect(&rectObstacle1, obstacle1.position);
-		SetRect(&rectObstacle2, obstacle2.position);
-		SetRect(&rectObstacle3, obstacle3.position);
-		SetRect(&rectObstacle4, obstacle4.position);
-
-		DrawImage(renderer, dragon.texture, rectDragon);
-		DrawImage(renderer, executioner.texture, rectExecutioner);
-		DrawImage(renderer, horseRider.texture, rectHorseRider);
-		DrawImage(renderer, jester.texture, rectJester);
-		DrawImage(renderer, king.texture, rectKing);
-		DrawImage(renderer, queen.texture, rectQueen);
-		DrawImage(renderer, soldier.texture, rectSoldier);
-		DrawImage(renderer, wizard.texture, rectWizard);
-
-		DrawImage(renderer, centaur.texture, rectCentaur);
-		DrawImage(renderer, cthulhu.texture, rectCthulu);
-		DrawImage(renderer, cyclops.texture, rectCyclops);
-		DrawImage(renderer, griffin.texture, rectGriffin);
-		DrawImage(renderer, minotaur.texture, rectMinotaur);
-		DrawImage(renderer, troll.texture, rectTroll);
-		DrawImage(renderer, werewolf.texture, rectWerewolf);
-		DrawImage(renderer, snake.texture, rectSnake);
-
-		DrawImage(renderer, obstacle1.texture, rectObstacle1);
-		DrawImage(renderer, obstacle2.texture, rectObstacle2);
-		DrawImage(renderer, obstacle3.texture, rectObstacle3);
-		DrawImage(renderer, obstacle4.texture, rectObstacle4);
-
-		DrawImage(renderer, dragon.textTexture, textRect);
-		DrawImage(renderer, executioner.textTexture, rectExecutioner);
-		DrawImage(renderer, horseRider.textTexture, rectHorseRider);
-		DrawImage(renderer, jester.textTexture, rectJester);
-		DrawImage(renderer, king.textTexture, rectKing);
-		DrawImage(renderer, queen.textTexture, rectQueen);
-		DrawImage(renderer, soldier.textTexture, rectSoldier);
-		DrawImage(renderer, wizard.textTexture, rectWizard);
-		DrawImage(renderer, centaur.textTexture, rectCentaur);
-		DrawImage(renderer, cyclops.textTexture, rectCyclops);
-		DrawImage(renderer, griffin.textTexture, rectGriffin);
-		DrawImage(renderer, minotaur.textTexture, rectMinotaur);
-		DrawImage(renderer, troll.textTexture, rectTroll);
-		DrawImage(renderer, werewolf.textTexture, rectWerewolf);
-		DrawImage(renderer, snake.textTexture, rectSnake);
-		DrawImage(renderer, cthulhu.textTexture, rectCthulu);
-
+			SetTextRect(&playerCharacters[i]->textRect, playerCharacters[i]->position);
+			SetTextRect(&aiCharacters[i]->textRect, aiCharacters[i]->position);
+			DrawImage(renderer, playerCharacters[i]->textTexture, playerCharacters[i]->textRect);
+			DrawImage(renderer, aiCharacters[i]->textTexture, aiCharacters[i]->textRect);
+		}
 
 		// Showing the screen to the player
 		SDL_RenderPresent(renderer);
