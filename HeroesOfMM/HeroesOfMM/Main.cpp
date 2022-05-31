@@ -11,7 +11,7 @@
 typedef unsigned char uchar;
 
 const char fontPath[] = "OdibeeSans-Regular.ttf";
-const int fontSize = 32;
+const int fontSize = 42;
 
 const int screenWidth = 1920;
 const int screenHeight = 1080;
@@ -167,8 +167,8 @@ struct Character
 	int health = 1;
 	int attackDamage = 0;
 
-	int healthValue = quantity * health;
-	int attackValue = quantity * attackDamage;
+	//int healthValue = quantity * health;
+	//int attackValue = quantity * attackDamage;
 
 	SDL_Texture* texture;
 	SDL_Texture* textTexture;
@@ -185,7 +185,22 @@ struct Character
 	void PlaceCharacter(Vector2i pos);
 	void Move(Vector2i dest);
 	void Attack();
+	void UpdateHealth(SDL_Renderer* rend, SDL_Surface* textSur, TTF_Font* font);
 };
+
+void Character::UpdateHealth(SDL_Renderer* rend, SDL_Surface* textSur, TTF_Font* font)
+{
+	//textSur = TTF_RenderText_Solid(font, CastToArray(healthValue), { 255, 255, 255 });
+	//textTexture = SDL_CreateTextureFromSurface(rend, textSur);
+
+	const char* text_ = CastToArray(health);
+
+	textSur = TTF_RenderText_Solid(font, text_, { 255, 255, 255 });
+
+	textTexture = SDL_CreateTextureFromSurface(rend, textSur);
+
+	SDL_FreeSurface(textSur);
+}
 
 void Character::PlaceCharacter(Vector2i pos)
 {
@@ -198,12 +213,13 @@ Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Sur
 	PlaceCharacter(pos);
 	battlefield[MouseToGridPos(position).y + 1][MouseToGridPos(position).x + 1] = 255;
 	texture = SetTexture(sur, rend, imagePath);
-	textSur = TTF_RenderText_Solid(font, CastToArray(healthValue), { 255, 255, 255 });
+	textSur = TTF_RenderText_Solid(font, CastToArray(health), { 255, 255, 255 });
 	textTexture = SDL_CreateTextureFromSurface(rend, textSur);
 }
 
 void Character::Move(Vector2i dest)
 {
+	//health++;
 	destinationGrid = dest;
 	currentGrid = { position.x / gridElementPixelWidth ,position.y / gridElementPixelHeight };
 	destinationGrid.x += 1;
