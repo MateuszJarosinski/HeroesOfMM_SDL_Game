@@ -294,6 +294,7 @@ void Character::Move(Vector2i dest)
 struct Obstacle
 {
 	SDL_Texture* texture;
+	SDL_Rect rectObstacle;
 
 	Vector2i position;
 
@@ -448,6 +449,28 @@ Vector2i GetRandomGrid()
 	}
 }
 
+Vector2i SetAiDestination(Vector2i vector)
+{
+	
+	//printf("%i\n", battlefield[vector.x][vector.y + 1]);
+	if (battlefield[vector.x][vector.y - 1] != 255)
+	{
+		return Vector2i{ vector.x, vector.y - 1 };
+	}
+	else if (battlefield[vector.x - 2][vector.y - 1] != 255)
+	{
+		return Vector2i{ vector.x - 2, vector.y - 1 };
+	}
+	else if (vector.x - 1, vector.y - 1 != 255)
+	{
+		return Vector2i{ vector.x, vector.y - 1 };
+	}
+	else if (vector.x + 1, vector.y != 255)
+	{
+		return Vector2i{ vector.x, vector.y - 1 };
+	}
+}
+
 void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget)
 {
 	if (*playerIsMoving)
@@ -467,7 +490,7 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	}
 	if (*playerFinishMove && *aiIsMoving)
 	{
-		aiCharacter->Move(aiTarget->currentGrid);
+		aiCharacter->Move({ aiTarget->currentGrid.x, aiTarget->currentGrid.y - 1});
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
@@ -638,6 +661,16 @@ int main()
 			DrawImage(renderer, playerCharacters[i]->textTexture, playerCharacters[i]->textRect);
 			DrawImage(renderer, aiCharacters[i]->textTexture, aiCharacters[i]->textRect);
 		}
+
+		SetRect(&obstacle1.rectObstacle, obstacle1.position);
+		SetRect(&obstacle2.rectObstacle, obstacle2.position);
+		SetRect(&obstacle3.rectObstacle, obstacle3.position);
+		SetRect(&obstacle4.rectObstacle, obstacle4.position);
+	   
+		DrawImage(renderer, obstacle1.texture, obstacle1.rectObstacle);
+		DrawImage(renderer, obstacle2.texture, obstacle2.rectObstacle);
+		DrawImage(renderer, obstacle3.texture, obstacle3.rectObstacle);
+		DrawImage(renderer, obstacle4.texture, obstacle4.rectObstacle);
 
 		// Showing the screen to the player
 		SDL_RenderPresent(renderer);
