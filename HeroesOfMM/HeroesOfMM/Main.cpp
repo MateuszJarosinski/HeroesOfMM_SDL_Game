@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
@@ -9,8 +10,8 @@
 
 SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath);
 
-//const char fontPath[] = "OdibeeSans-Regular.ttf";
-//const int fontSize = 42;
+const char fontPath[] = "OdibeeSans-Regular.ttf";
+const int fontSize = 32;
 
 typedef unsigned char uchar;
 
@@ -37,6 +38,20 @@ Vector2i MouseToGridPos(Vector2i mousePos)
 {
 	Vector2i gridPos = { mousePos.x / gridElementPixelWidth ,  mousePos.y / gridElementPixelHeight };
 	return gridPos;
+}
+
+char* CastToArray(int number)
+{
+    int n = log10(number) + 1;
+    int i;
+    char* numberArray = (char*)calloc(n, sizeof(char));
+    numberArray[n] = '\0';
+    for (i = n - 1; i >= 0; --i, number /= 10)
+    {
+        numberArray[i] = (number % 10) + '0';
+    }
+
+    return numberArray;
 }
 
 void GrassfireAlgorithm()
@@ -148,15 +163,25 @@ void PrintArray()
 
 struct Character
 {
+	int quantity = 1;
+	int health = 1;
+	int attackDamage = 0;
+
+	int healthValue = quantity * health;
+	int attackValue = quantity * attackDamage;
+
 	SDL_Texture* texture;
+	SDL_Texture* textTexture;
+
 	Vector2i position;
 	Vector2i currentGrid = {0,0};
 	Vector2i destinationGrid;
 	Vector2i pastGrid = {0,0};
 
-	Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath);
+	Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Surface* textSurface, const char* imagePath, TTF_Font* font);
 	void PlaceCharacter(Vector2i pos);
 	void Move(Vector2i dest);
+	void Attack();
 };
 
 void Character::PlaceCharacter(Vector2i pos)
@@ -165,11 +190,13 @@ void Character::PlaceCharacter(Vector2i pos)
 	position.y = (pos.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
 }
 
-Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, const char* imagePath)
+Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Surface* textSur, const char* imagePath, TTF_Font* font)
 {
 	PlaceCharacter(pos);
 	battlefield[MouseToGridPos(position).y + 1][MouseToGridPos(position).x + 1] = 255;
 	texture = SetTexture(sur, rend, imagePath);
+	textSur = TTF_RenderText_Solid(font, CastToArray(healthValue), { 255, 255, 255 });
+	textTexture = SDL_CreateTextureFromSurface(rend, textSur);
 }
 
 void Character::Move(Vector2i dest)
@@ -277,16 +304,16 @@ uint32_t DeltaTime(uint32_t* lastTickTime, uint32_t* tickTime)
 	return deltaTime;
 }
 
-//TTF_Font* GetFont()
-//{
-//	if (TTF_Init() < 0)
-//		abort();
-//	TTF_Font* font = TTF_OpenFont(fontPath, fontSize);
-//	if (font)
-//		return font;
-//	else
-//		abort();
-//}
+TTF_Font* GetFont()
+{
+	if (TTF_Init() < 0)
+		abort();
+	TTF_Font* font = TTF_OpenFont(fontPath, fontSize);
+	if (font)
+		return font;
+	else
+		abort();
+}
 
 SDL_Texture* SetTexture(SDL_Surface* surface, SDL_Renderer* renderer, const char* imagePath)
 {
@@ -315,6 +342,14 @@ void SetRect(SDL_Rect* rect, Vector2i position)
 	rect->y = (int)round(position.y - gridElementPixelHeight / 2); // Counting from the image's center but that's up to you
 	rect->w = (int)gridElementPixelWidth;
 	rect->h = (int)gridElementPixelHeight;
+}
+
+void SetTextRect(SDL_Rect* rect, Vector2i position)
+{
+	rect->x = (int)round(position.x - gridElementPixelWidth / 2); // Counting from the image's center but that's up to you
+	rect->y = (int)round(position.y - gridElementPixelHeight / 2); // Counting from the image's center but that's up to you
+	rect->w = fontSize;
+	rect->h = fontSize;
 }
 
 void DrawImage(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect)
@@ -394,7 +429,7 @@ Vector2i GetRandomGrid()
 	}
 }
 
-void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos)
+void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget)
 {
 	if (*playerIsMoving)
 	{
@@ -413,7 +448,7 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	}
 	if (*playerFinishMove && *aiIsMoving)
 	{
-		aiCharacter->Move(GetRandomGrid());
+		aiCharacter->Move(aiTarget->currentGrid);
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
@@ -429,6 +464,8 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 
 int main()
 {
+	int random = 0;
+
 	int tour = 0;
 	bool playerIsMoving = false;
 	bool playerFinishMove = false;
@@ -442,9 +479,8 @@ int main()
 	SDL_Window* window = nullptr;
 	SDL_Surface* surface = nullptr;
 
-	//SDL_Texture* textTexture = nullptr;
-	//SDL_Surface* textSurface = nullptr;
-	//TTF_Font* font = GetFont();
+	SDL_Surface* textSurface = nullptr;
+	TTF_Font* font = GetFont();
 
 	bool initSDLResult = InitSDL(&renderer, &window);
 	if (!initSDLResult)
@@ -452,29 +488,26 @@ int main()
 		return -1;
 	}
 
-	//textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
-	//textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+	Character horseRider({ 1,2 }, surface, renderer, textSurface, "horseRider.png", font);
+	Character jester({ 1,3 }, surface, renderer, textSurface, "jester.png", font);
+	Character executioner({ 1,4 }, surface, renderer, textSurface, "executioner.png", font);
+	Character king({ 1,5 }, surface, renderer, textSurface, "king.png", font);
+	Character queen({ 1,6 }, surface, renderer, textSurface, "queen.png", font);
+	Character wizard({ 1,7 }, surface, renderer, textSurface, "wizard.png", font);
+	Character dragon({ 1,8 }, surface, renderer, textSurface, "dragon.png", font);
+	Character soldier({ 1,9 }, surface, renderer, textSurface, "soldier.png", font);
 
-	Character horseRider({ 1,2 }, surface, renderer, "horseRider.png");
-	Character jester({ 1,3 }, surface, renderer, "jester.png");
-	Character executioner({ 1,4 }, surface, renderer, "executioner.png");
-	Character king({ 1,5 }, surface, renderer, "king.png");
-	Character queen({ 1,6 }, surface, renderer, "queen.png");
-	Character wizard({ 1,7 }, surface, renderer, "wizard.png");
-	Character dragon({ 1,8 }, surface, renderer, "dragon.png");
-	Character soldier({ 1,9 }, surface, renderer, "soldier.png");
+	Character centaur({ 15,2 }, surface, renderer, textSurface, "centaur.png", font);
+	Character cthulhu({ 15,3 }, surface, renderer, textSurface, "cthulhu.png", font);
+	Character cyclops({ 15,4 }, surface, renderer, textSurface, "cyclops.png", font);
+	Character griffin({ 15,5 }, surface, renderer, textSurface, "griffin.png", font);
+	Character minotaur({ 15,6 }, surface, renderer, textSurface, "minotaur.png", font);
+	Character troll({ 15,7 }, surface, renderer, textSurface, "troll.png", font);
+	Character werewolf({ 15,8 }, surface, renderer, textSurface, "werewolf.png", font);
+	Character snake({ 15,9 }, surface, renderer, textSurface, "snake.png", font);
 
-	Character centaur({ 15,2 }, surface, renderer, "centaur.png");
-	Character cthulhu({ 15,3 }, surface, renderer, "cthulhu.png");
-	Character cyclops({ 15,4 }, surface, renderer, "cyclops.png");
-	Character griffin({ 15,5 }, surface, renderer, "griffin.png");
-	Character minotaur({ 15,6 }, surface, renderer, "minotaur.png");
-	Character troll({ 15,7 }, surface, renderer, "troll.png");
-	Character werewolf({ 15,8 }, surface, renderer, "werewolf.png");
-	Character snake({ 15,9 }, surface, renderer, "snake.png");
-
-	Character allCharacters[]{
-	centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake, centaur, cthulhu, cyclops, griffin, minotaur, troll, werewolf, snake
+	Character* allCharacters[]{
+	&horseRider, &jester, &executioner, &king, &queen, &wizard, &dragon, &soldier
 	};
 
 	Obstacle obstacle1({ GetRandom15(), GetRandom11() }, surface, renderer, "stone.png");
@@ -543,34 +576,35 @@ int main()
 		switch (tour)
 		{
 		case 0:
-			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos);
+			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, allCharacters[0]);
 			break;
 		case 1:
-			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos);
+			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, allCharacters[1]);
 			break;
 		case 2:
-			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos);
+			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, allCharacters[2]);
 			break;
 		case 3:
-			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos);
+			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, allCharacters[3]);
 			break;
 		case 4:
-			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos);
+			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, allCharacters[4]);
 			break;
 		case 5:
-			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos);
+			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, allCharacters[5]);
 			break;
 		case 6:
-			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos);
+			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, allCharacters[6]);
 			break;
 		case 7:
-			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos);
+			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, allCharacters[7]);
 			break;
 		default:
 			break;
 		}
 
 		// Here is the rectangle where the image will be on the screen
+		SDL_Rect textRect;
 		SDL_Rect rectDragon;
 		SDL_Rect rectExecutioner;
 		SDL_Rect rectHorseRider;
@@ -594,6 +628,7 @@ int main()
 		SDL_Rect rectObstacle3;
 		SDL_Rect rectObstacle4;
 
+		SetTextRect(&textRect, dragon.position);
 		SetRect(&rectDragon, dragon.position);
 		SetRect(&rectExecutioner, executioner.position);
 		SetRect(&rectHorseRider, horseRider.position);
@@ -640,10 +675,23 @@ int main()
 		DrawImage(renderer, obstacle3.texture, rectObstacle3);
 		DrawImage(renderer, obstacle4.texture, rectObstacle4);
 
-		//textSurface = TTF_RenderText_Solid(font, "very nice text", { 255, 255, 255 });
-		//textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-		//SDL_Rect textRect = { 0, 0, textSurface->w, textSurface->h };
-		//SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+		DrawImage(renderer, dragon.textTexture, textRect);
+		DrawImage(renderer, executioner.textTexture, rectExecutioner);
+		DrawImage(renderer, horseRider.textTexture, rectHorseRider);
+		DrawImage(renderer, jester.textTexture, rectJester);
+		DrawImage(renderer, king.textTexture, rectKing);
+		DrawImage(renderer, queen.textTexture, rectQueen);
+		DrawImage(renderer, soldier.textTexture, rectSoldier);
+		DrawImage(renderer, wizard.textTexture, rectWizard);
+		DrawImage(renderer, centaur.textTexture, rectCentaur);
+		DrawImage(renderer, cyclops.textTexture, rectCyclops);
+		DrawImage(renderer, griffin.textTexture, rectGriffin);
+		DrawImage(renderer, minotaur.textTexture, rectMinotaur);
+		DrawImage(renderer, troll.textTexture, rectTroll);
+		DrawImage(renderer, werewolf.textTexture, rectWerewolf);
+		DrawImage(renderer, snake.textTexture, rectSnake);
+		DrawImage(renderer, cthulhu.textTexture, rectCthulu);
+
 
 		// Showing the screen to the player
 		SDL_RenderPresent(renderer);
