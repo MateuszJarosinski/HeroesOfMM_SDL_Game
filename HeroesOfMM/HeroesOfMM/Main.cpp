@@ -163,9 +163,9 @@ void PrintArray()
 
 struct Character
 {
-	int quantity = 1;
-	int health = 1;
-	int attackDamage = 0;
+	int quantity = 10;
+	int health = 20;
+	int attackDamage = 15;
 
 	//int healthValue = quantity * health;
 	//int attackValue = quantity * attackDamage;
@@ -186,7 +186,41 @@ struct Character
 	void Move(Vector2i dest);
 	void Attack();
 	void UpdateHealth(SDL_Renderer* rend, SDL_Surface* textSur, TTF_Font* font);
+	void Attack(Character* enemy);
 };
+
+void Character::Attack(Character* enemy)
+{
+	int totalEnemyHealth = enemy->health * enemy->quantity;
+	int totalHealth = health * quantity;
+
+	int totalDamage = attackDamage * quantity;
+
+
+	int newEnemyHealth = totalEnemyHealth -= totalDamage;
+
+	if (newEnemyHealth > 0)
+	{
+		int enemyQuantityDead = totalDamage / enemy->health;
+		enemy->quantity = enemy->quantity - enemyQuantityDead;
+
+		int totalEnemyDamage = enemy->attackDamage * enemy->quantity;
+		int newHealth = totalHealth -= totalEnemyDamage;
+		if (newHealth > 0)
+		{
+			int quantityDead = totalEnemyDamage / health;
+			quantity -= quantityDead;
+		}
+		else
+		{
+			//DIE
+		}
+	}
+	else
+	{
+		//DIE
+	}
+}
 
 void Character::UpdateHealth(SDL_Renderer* rend, SDL_Surface* textSur, TTF_Font* font)
 {
@@ -450,10 +484,10 @@ Vector2i GetRandomGrid()
 
 Vector2i SetAiDestination(Vector2i vector)
 {
-	printf("%i e\n", battlefield[vector.y + 1][vector.x + 2]);
-	printf("%i w\n", battlefield[vector.y + 1][vector.x]);
-	printf("%i n\n", battlefield[vector.y + 2][vector.x + 1]);
-	printf("%i s\n", battlefield[vector.y][vector.x + 1]);
+	//printf("%i e\n", battlefield[vector.y + 1][vector.x + 2]);
+	//printf("%i w\n", battlefield[vector.y + 1][vector.x]);
+	//printf("%i n\n", battlefield[vector.y + 2][vector.x + 1]);
+	//printf("%i s\n", battlefield[vector.y][vector.x + 1]);
 
 	if (battlefield[vector.y + 1][vector.x + 2] != 255 && battlefield[vector.y + 1][vector.x + 2] != 200)
 	{
@@ -497,6 +531,11 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
+			//printf("%i\n", playerCharacter->quantity);
+			//printf("%i\n", aiCharacter->quantity);
+			//aiCharacter->Attack(playerCharacter);
+			//printf("%i\n", playerCharacter->quantity);
+			//printf("%i\n", aiCharacter->quantity);
 			aiCharacter->destinationGrid.x = 0;
 			aiCharacter->destinationGrid.y = 0;
 			*aiIsMoving = false;
