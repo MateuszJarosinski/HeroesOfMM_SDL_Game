@@ -154,7 +154,7 @@ void PrintArray()
 	{
 		for (int columns = 0; columns < 17; columns++)
 		{
-			printf("%d  ", battlefield[rows][columns]);
+			printf("%i\t  ", battlefield[rows][columns]);
 		}
 		printf("\n");
 	}
@@ -193,7 +193,7 @@ void Character::UpdateHealth(SDL_Renderer* rend, SDL_Surface* textSur, TTF_Font*
 	//textSur = TTF_RenderText_Solid(font, CastToArray(healthValue), { 255, 255, 255 });
 	//textTexture = SDL_CreateTextureFromSurface(rend, textSur);
 
-	const char* text_ = CastToArray(health);
+	const char* text_ = CastToArray(quantity);
 
 	textSur = TTF_RenderText_Solid(font, text_, { 255, 255, 255 });
 
@@ -219,7 +219,6 @@ Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Sur
 
 void Character::Move(Vector2i dest)
 {
-	//health++;
 	destinationGrid = dest;
 	currentGrid = { position.x / gridElementPixelWidth ,position.y / gridElementPixelHeight };
 	destinationGrid.x += 1;
@@ -451,21 +450,24 @@ Vector2i GetRandomGrid()
 
 Vector2i SetAiDestination(Vector2i vector)
 {
-	
-	//printf("%i\n", battlefield[vector.x][vector.y + 1]);
-	if (battlefield[vector.x][vector.y - 1] != 255)
+	printf("%i e\n", battlefield[vector.y + 1][vector.x + 2]);
+	printf("%i w\n", battlefield[vector.y + 1][vector.x]);
+	printf("%i n\n", battlefield[vector.y + 2][vector.x + 1]);
+	printf("%i s\n", battlefield[vector.y][vector.x + 1]);
+
+	if (battlefield[vector.y + 1][vector.x + 2] != 255 && battlefield[vector.y + 1][vector.x + 2] != 200)
 	{
-		return Vector2i{ vector.x, vector.y - 1 };
+		return Vector2i{ vector.x + 1, vector.y };
 	}
-	else if (battlefield[vector.x - 2][vector.y - 1] != 255)
+	else if (battlefield[vector.y + 1][vector.x] != 255 && battlefield[vector.y + 1][vector.x] != 200)
 	{
-		return Vector2i{ vector.x - 2, vector.y - 1 };
+		return Vector2i{ vector.x - 1, vector.y };
 	}
-	else if (vector.x - 1, vector.y - 1 != 255)
+	else if (battlefield[vector.y + 2][vector.x + 1] != 255 && battlefield[vector.y + 2][vector.x + 1] != 200)
 	{
-		return Vector2i{ vector.x, vector.y - 1 };
+		return Vector2i{ vector.x, vector.y + 1};
 	}
-	else if (vector.x + 1, vector.y != 255)
+	else if (battlefield[vector.y][vector.x + 1] != 255 && battlefield[vector.y][vector.x + 1] != 200)
 	{
 		return Vector2i{ vector.x, vector.y - 1 };
 	}
@@ -490,7 +492,8 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	}
 	if (*playerFinishMove && *aiIsMoving)
 	{
-		aiCharacter->Move({ aiTarget->currentGrid.x, aiTarget->currentGrid.y - 1});
+		aiCharacter->Move(SetAiDestination({ aiTarget->currentGrid.x - 1, aiTarget->currentGrid.y - 1 }));
+		PrintArray();
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
