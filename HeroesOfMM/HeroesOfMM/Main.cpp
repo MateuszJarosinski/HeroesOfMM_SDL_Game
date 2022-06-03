@@ -163,6 +163,8 @@ void PrintArray()
 
 struct Character
 {
+	bool isAlive = true;
+
 	int quantity = 10;
 	int health = 20;
 	int attackDamage = 15;
@@ -198,6 +200,7 @@ void Character::Attack(Character* enemy)
 
 
 	int newEnemyHealth = totalEnemyHealth -= totalDamage;
+	printf("%i\n", newEnemyHealth);
 
 	if (newEnemyHealth > 0)
 	{
@@ -214,11 +217,16 @@ void Character::Attack(Character* enemy)
 		else
 		{
 			//DIE
+			printf("die kurwa player!\n");
+			//quantity = 0;
+			isAlive = false;
 		}
 	}
 	else
 	{
 		//DIE
+		//printf("die kurwa enemy!\n");
+		enemy->isAlive = false;
 	}
 }
 
@@ -249,7 +257,7 @@ Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Sur
 	currentGrid.x += 1; currentGrid.y += 1;
 	battlefield[MouseToGridPos(position).y + 1][MouseToGridPos(position).x + 1] = 255;
 	texture = SetTexture(sur, rend, imagePath);
-	textSur = TTF_RenderText_Solid(font, CastToArray(health), { 255, 255, 255 });
+	textSur = TTF_RenderText_Solid(font, CastToArray(quantity), { 255, 255, 255 });
 	textTexture = SDL_CreateTextureFromSurface(rend, textSur);
 }
 
@@ -469,6 +477,12 @@ int GetRandom15()
 	return random;
 }
 
+int GetRandomCharacter()
+{
+	int random = (rand() % (7 - 0 + 1)) + 0;
+	return random;
+}
+
 Vector2i GetRandomGrid()
 {
 	int randomX = GetRandom11();
@@ -522,6 +536,11 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 
 			if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
 			{
+				printf("p %i\n", playerCharacter->quantity);
+				printf("t %i\n", playerTarget->quantity);
+				playerCharacter->Attack(playerTarget);
+				printf("p %i\n", playerCharacter->quantity);
+				printf("t %i\n", playerTarget->quantity);
 				playerCharacter->destinationGrid.x = 0;
 				playerCharacter->destinationGrid.y = 0;
 				*playerIsMoving = false;
@@ -557,11 +576,11 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
-			//printf("%i\n", playerCharacter->quantity);
-			//printf("%i\n", aiCharacter->quantity);
-			//aiCharacter->Attack(playerCharacter);
-			//printf("%i\n", playerCharacter->quantity);
-			//printf("%i\n", aiCharacter->quantity);
+			printf("p %i\n", playerCharacter->quantity);
+			printf("a %i\n", aiCharacter->quantity);
+			aiCharacter->Attack(aiTarget);
+			printf("p %i\n", playerCharacter->quantity);
+			printf("a %i\n", aiCharacter->quantity);
 			aiCharacter->destinationGrid.x = 0;
 			aiCharacter->destinationGrid.y = 0;
 			*aiIsMoving = false;
@@ -575,6 +594,7 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 int main()
 {
 	int random = 0;
+	int aiTarget = 0;
 
 	int tour = 0;
 	bool playerIsMoving = false;
@@ -683,6 +703,8 @@ int main()
 					SetAllGridElementsToZero();
 
 					SDL_GetMouseState(&mousePos.x, &mousePos.y);
+					aiTarget = GetRandomCharacter();
+					//printf("%i\n", aiTarget);
 
 					Vector2i grid = MouseToGridPos(mousePos);
 					//printf("%i\n", grid.x + 1);
@@ -712,31 +734,76 @@ int main()
 		switch (tour)
 		{
 		case 0:
-			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[0], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//printf("%i\n", aiTarget);
+			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 1:
-			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[1], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			printf("c %i\n", cthulhu.quantity);
+			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
+			printf("c %i\n", cthulhu.quantity);
 			break;
 		case 2:
-			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[2], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//printf("%i\n", aiTarget);
+			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 3:
-			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[3], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//printf("%i\n", aiTarget);
+			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 4:
-			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[4], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//printf("%i\n", aiTarget);
+			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 5:
-			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[5], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//printf("%i\n", aiTarget);
+			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 6:
-			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[6], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//printf("%i\n", aiTarget);
+			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 7:
-			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[7], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//printf("%i\n", aiTarget);
+			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
+			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		default:
 			break;
+		}
+
+		for (int i = 0; i < 8; i++)
+		{
+			aiCharacters[i]->UpdateHealth(renderer, textSurface, font);
+			playerCharacters[i]->UpdateHealth(renderer, textSurface, font);
+		}
+
+		for (int i = 0; i < 8; i++)
+		{
+			if (playerCharacters[i]->isAlive == false)
+			{
+				playerCharacters[i]->texture = SetTexture(surface, renderer, "skull.png");
+				playerCharacters[i]->textTexture = SetTexture(surface, renderer, "close.png");
+			}
+			if (aiCharacters[i]->isAlive == false)
+			{
+				aiCharacters[i]->texture = SetTexture(surface, renderer, "skull.png");;
+				aiCharacters[i]->textTexture = SetTexture(surface, renderer, "close.png");
+			}
 		}
 
 		for (int i = 0; i < 8; i++)
