@@ -185,7 +185,7 @@ struct Character
 	Vector2i destinationGrid;
 	Vector2i pastGrid = {0,0};
 
-	Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Surface* textSurface, const char* imagePath, TTF_Font* font);
+	Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Surface* textSurface, const char* imagePath, TTF_Font* font, int quan, int hp, int attack);
 	void PlaceCharacter(Vector2i pos);
 	void Move(Vector2i dest);
 	void Attack();
@@ -238,9 +238,6 @@ void Character::Attack(Character* enemy)
 
 void Character::UpdateHealth(SDL_Renderer* rend, SDL_Surface* textSur, TTF_Font* font)
 {
-	//textSur = TTF_RenderText_Solid(font, CastToArray(healthValue), { 255, 255, 255 });
-	//textTexture = SDL_CreateTextureFromSurface(rend, textSur);
-
 	const char* text_ = CastToArray(quantity);
 
 	if (isAlive)
@@ -259,8 +256,12 @@ void Character::PlaceCharacter(Vector2i pos)
 	position.y = (pos.y - 1) * gridElementPixelHeight + gridElementPixelHeight / 2;
 }
 
-Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Surface* textSur, const char* imagePath, TTF_Font* font)
+Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Surface* textSur, const char* imagePath, TTF_Font* font, int quan, int hp, int attack)
 {
+	quantity = quan;
+	health = hp;
+	attackDamage = attack;
+
 	PlaceCharacter(pos);
 	currentGrid = MouseToGridPos(position);
 	currentGrid.x += 1; currentGrid.y += 1;
@@ -486,10 +487,17 @@ int GetRandom15()
 	return random;
 }
 
-int GetRandomCharacter()
+int GetRandomCharacter(Character* characters[])
 {
 	int random = (rand() % (7 - 0 + 1)) + 0;
-	return random;
+	if (characters[random]->isAlive)
+	{
+		return random;
+	}
+	else
+	{
+		GetRandomCharacter(characters);
+	}
 }
 
 Vector2i GetRandomGrid()
@@ -509,11 +517,6 @@ Vector2i GetRandomGrid()
 
 Vector2i SetAiDestination(Vector2i vector)
 {
-	//printf("%i e\n", battlefield[vector.y + 1][vector.x + 2]);
-	//printf("%i w\n", battlefield[vector.y + 1][vector.x]);
-	//printf("%i n\n", battlefield[vector.y + 2][vector.x + 1]);
-	//printf("%i s\n", battlefield[vector.y][vector.x + 1]);
-
 	if (battlefield[vector.y + 1][vector.x + 2] != 255 && battlefield[vector.y + 1][vector.x + 2] != 200)
 	{
 		return Vector2i{ vector.x + 1, vector.y };
@@ -538,9 +541,6 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	{
 		if (*playerMarkedEnemy)
 		{
-			//Vector2i grid = SetAiDestination({ playerTarget->currentGrid.x - 1, playerTarget->currentGrid.y - 1});
-			//printf("x %i\n", grid.x);
-			//printf("y %i\n", grid.y);
 			playerCharacter->Move(SetAiDestination({playerTarget->currentGrid.x - 1, playerTarget->currentGrid.y - 1}));
 
 			if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
@@ -575,13 +575,10 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 				battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
 			}
 		}
-		//PrintArray();
-		//printf("%i\n", battlefield[gridPos.y + 1][gridPos.x + 1]);
 	}
-	if (*playerFinishMove && *aiIsMoving)
+	if (*playerFinishMove && *aiIsMoving )
 	{
 		aiCharacter->Move(SetAiDestination({ aiTarget->currentGrid.x - 1, aiTarget->currentGrid.y - 1 }));
-		//PrintArray();
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
@@ -630,23 +627,23 @@ int main()
 		return -1;
 	}
 
-	Character horseRider({ 1,2 }, surface, renderer, textSurface, "horseRider.png", font);
-	Character jester({ 1,3 }, surface, renderer, textSurface, "jester.png", font);
-	Character executioner({ 1,4 }, surface, renderer, textSurface, "executioner.png", font);
-	Character king({ 1,5 }, surface, renderer, textSurface, "king.png", font);
-	Character queen({ 1,6 }, surface, renderer, textSurface, "queen.png", font);
-	Character wizard({ 1,7 }, surface, renderer, textSurface, "wizard.png", font);
-	Character dragon({ 1,8 }, surface, renderer, textSurface, "dragon.png", font);
-	Character soldier({ 1,9 }, surface, renderer, textSurface, "soldier.png", font);
+	Character horseRider({ 1,2 }, surface, renderer, textSurface, "horseRider.png", font, 10, 8, 2);
+	Character jester({ 1,3 }, surface, renderer, textSurface, "jester.png", font, 12, 6, 9);
+	Character executioner({ 1,4 }, surface, renderer, textSurface, "executioner.png", font, 15, 4, 14);
+	Character king({ 1,5 }, surface, renderer, textSurface, "king.png", font, 1, 50, 30);
+	Character queen({ 1,6 }, surface, renderer, textSurface, "queen.png", font, 1, 30, 50);
+	Character wizard({ 1,7 }, surface, renderer, textSurface, "wizard.png", font, 6, 8, 9);
+	Character dragon({ 1,8 }, surface, renderer, textSurface, "dragon.png", font, 4, 3, 10);
+	Character soldier({ 1,9 }, surface, renderer, textSurface, "soldier.png", font, 12, 8, 3);
 
-	Character centaur({ 15,2 }, surface, renderer, textSurface, "centaur.png", font);
-	Character cthulhu({ 15,3 }, surface, renderer, textSurface, "cthulhu.png", font);
-	Character cyclops({ 15,4 }, surface, renderer, textSurface, "cyclops.png", font);
-	Character griffin({ 15,5 }, surface, renderer, textSurface, "griffin.png", font);
-	Character minotaur({ 15,6 }, surface, renderer, textSurface, "minotaur.png", font);
-	Character troll({ 15,7 }, surface, renderer, textSurface, "troll.png", font);
-	Character werewolf({ 15,8 }, surface, renderer, textSurface, "werewolf.png", font);
-	Character snake({ 15,9 }, surface, renderer, textSurface, "snake.png", font);
+	Character centaur({ 15,2 }, surface, renderer, textSurface, "centaur.png", font, 4, 8, 2);
+	Character cthulhu({ 15,3 }, surface, renderer, textSurface, "cthulhu.png", font, 10, 10, 10);
+	Character cyclops({ 15,4 }, surface, renderer, textSurface, "cyclops.png", font, 9, 12, 3);
+	Character griffin({ 15,5 }, surface, renderer, textSurface, "griffin.png", font, 12, 4, 19);
+	Character minotaur({ 15,6 }, surface, renderer, textSurface, "minotaur.png", font, 3, 4, 6);
+	Character troll({ 15,7 }, surface, renderer, textSurface, "troll.png", font, 1, 2, 10);
+	Character werewolf({ 15,8 }, surface, renderer, textSurface, "werewolf.png", font, 5, 3, 10);
+	Character snake({ 15,9 }, surface, renderer, textSurface, "snake.png", font, 6, 5, 4);
 
 	Character* playerCharacters[]{
 	&horseRider, &jester, &executioner, &king, &queen, &wizard, &dragon, &soldier
@@ -712,17 +709,9 @@ int main()
 					SetAllGridElementsToZero();
 
 					SDL_GetMouseState(&mousePos.x, &mousePos.y);
-					aiTarget = GetRandomCharacter();
-					//printf("%i\n", aiTarget);
+					aiTarget = GetRandomCharacter(playerCharacters);
 
 					Vector2i grid = MouseToGridPos(mousePos);
-					//printf("%i\n", grid.x + 1);
-					//printf("%i\n", grid.y + 1);
-
-					//printf("\n");
-
-					//printf("c %i\n", centaur.currentGrid.x);
-					//printf("c %i\n", centaur.currentGrid.y);
 
 					for (int i = 0; i < 8; i++)
 					{
@@ -740,56 +729,32 @@ int main()
 		// Clearing the screen
 		SDL_RenderClear(renderer);
 
+
 		switch (tour)
 		{
 		case 0:
-			//printf("%i\n", aiTarget);
 			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 1:
-			printf("c %i\n", cthulhu.quantity);
 			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
-			printf("c %i\n", cthulhu.quantity);
 			break;
 		case 2:
-			//printf("%i\n", aiTarget);
 			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 3:
-			//printf("%i\n", aiTarget);
 			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 4:
-			//printf("%i\n", aiTarget);
 			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 5:
-			//printf("%i\n", aiTarget);
 			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 6:
-			//printf("%i\n", aiTarget);
 			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		case 7:
-			//printf("%i\n", aiTarget);
 			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-			//aiCharacters[enemyIndex]->UpdateHealth(renderer, textSurface, font);
-			//playerCharacters[aiTarget]->UpdateHealth(renderer, textSurface, font);
 			break;
 		default:
 			break;
