@@ -177,7 +177,7 @@ struct Character
 	SDL_Rect textRect;
 
 	Vector2i position;
-	Vector2i currentGrid = {0,0};
+	Vector2i currentGrid;
 	Vector2i destinationGrid;
 	Vector2i pastGrid = {0,0};
 
@@ -245,6 +245,8 @@ void Character::PlaceCharacter(Vector2i pos)
 Character::Character(Vector2i pos, SDL_Surface* sur, SDL_Renderer* rend, SDL_Surface* textSur, const char* imagePath, TTF_Font* font)
 {
 	PlaceCharacter(pos);
+	currentGrid = MouseToGridPos(position);
+	currentGrid.x += 1; currentGrid.y += 1;
 	battlefield[MouseToGridPos(position).y + 1][MouseToGridPos(position).x + 1] = 255;
 	texture = SetTexture(sur, rend, imagePath);
 	textSur = TTF_RenderText_Solid(font, CastToArray(health), { 255, 255, 255 });
@@ -507,27 +509,51 @@ Vector2i SetAiDestination(Vector2i vector)
 	}
 }
 
-void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget)
+void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget, bool* playerMarkedEnemy, Character* playerTarget)
 {
 	if (*playerIsMoving)
 	{
-		playerCharacter->Move(MouseToGridPos(mousePos));
-
-		if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
+		if (*playerMarkedEnemy)
 		{
-			playerCharacter->destinationGrid.x = 0;
-			playerCharacter->destinationGrid.y = 0;
-			*playerIsMoving = false;
-			*playerFinishMove = true;
-			*aiIsMoving = true;
-			SetAllGridElementsToZero();
-			battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
+			//Vector2i grid = SetAiDestination({ playerTarget->currentGrid.x - 1, playerTarget->currentGrid.y - 1});
+			//printf("x %i\n", grid.x);
+			//printf("y %i\n", grid.y);
+			playerCharacter->Move(SetAiDestination({playerTarget->currentGrid.x - 1, playerTarget->currentGrid.y - 1}));
+
+			if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
+			{
+				playerCharacter->destinationGrid.x = 0;
+				playerCharacter->destinationGrid.y = 0;
+				*playerIsMoving = false;
+				*playerFinishMove = true;
+				*aiIsMoving = true;
+				*playerMarkedEnemy = false;
+				SetAllGridElementsToZero();
+				battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
+			}
 		}
+		else
+		{
+			playerCharacter->Move(MouseToGridPos(mousePos));
+
+			if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
+			{
+				playerCharacter->destinationGrid.x = 0;
+				playerCharacter->destinationGrid.y = 0;
+				*playerIsMoving = false;
+				*playerFinishMove = true;
+				*aiIsMoving = true;
+				SetAllGridElementsToZero();
+				battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
+			}
+		}
+		//PrintArray();
+		//printf("%i\n", battlefield[gridPos.y + 1][gridPos.x + 1]);
 	}
 	if (*playerFinishMove && *aiIsMoving)
 	{
 		aiCharacter->Move(SetAiDestination({ aiTarget->currentGrid.x - 1, aiTarget->currentGrid.y - 1 }));
-		PrintArray();
+		//PrintArray();
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
@@ -554,6 +580,9 @@ int main()
 	bool playerIsMoving = false;
 	bool playerFinishMove = false;
 	bool aiIsMoving = false;
+	bool playerMarkedEnemy = false;
+
+	int enemyIndex = 0;
 
 	srand(time(nullptr)); // Initializing the seed of the random generator with current time
 	Vector2i mousePos = { 0, 0 };
@@ -654,6 +683,25 @@ int main()
 					SetAllGridElementsToZero();
 
 					SDL_GetMouseState(&mousePos.x, &mousePos.y);
+
+					Vector2i grid = MouseToGridPos(mousePos);
+					//printf("%i\n", grid.x + 1);
+					//printf("%i\n", grid.y + 1);
+
+					//printf("\n");
+
+					//printf("c %i\n", centaur.currentGrid.x);
+					//printf("c %i\n", centaur.currentGrid.y);
+
+					for (int i = 0; i < 8; i++)
+					{
+						if (aiCharacters[i]->currentGrid.x == grid.x + 1 && aiCharacters[i]->currentGrid.y == grid.y + 1)
+						{
+							playerMarkedEnemy = true;
+							enemyIndex = i;
+							//printf("target %i\n", aiCharacters[i]);
+						}
+					}
 				}
 			}
 		}
@@ -664,28 +712,28 @@ int main()
 		switch (tour)
 		{
 		case 0:
-			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[0]);
+			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[0], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		case 1:
-			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[1]);
+			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[1], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		case 2:
-			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[2]);
+			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[2], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		case 3:
-			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[3]);
+			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[3], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		case 4:
-			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[4]);
+			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[4], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		case 5:
-			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[5]);
+			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[5], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		case 6:
-			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[6]);
+			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[6], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		case 7:
-			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[7]);
+			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[7], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 			break;
 		default:
 			break;
