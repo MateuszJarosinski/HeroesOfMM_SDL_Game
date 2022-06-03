@@ -797,12 +797,12 @@ int main()
 
 		for (int i = 0; i < 8; i++)
 		{
-			if (aiCharacters[i]->updateHealth == true)
+			if (aiCharacters[i]->updateHealth == true && aiCharacters[i]->isAlive == true)
 			{
 				aiCharacters[i]->UpdateHealth(renderer, textSurface, font);
 				aiCharacters[i]->updateHealth = false;
 			}
-			if (playerCharacters[i]->updateHealth == true)
+			if (playerCharacters[i]->updateHealth == true && playerCharacters[i]->isAlive == true)
 			{
 				playerCharacters[i]->UpdateHealth(renderer, textSurface, font);
 				playerCharacters[i]->updateHealth = false;
