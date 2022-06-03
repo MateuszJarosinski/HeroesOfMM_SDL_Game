@@ -164,6 +164,8 @@ void PrintArray()
 struct Character
 {
 	bool isAlive = true;
+	bool imageDisabled = false;
+	bool updateHealth = false;
 
 	int quantity = 10;
 	int health = 20;
@@ -206,6 +208,7 @@ void Character::Attack(Character* enemy)
 	{
 		int enemyQuantityDead = totalDamage / enemy->health;
 		enemy->quantity = enemy->quantity - enemyQuantityDead;
+		enemy->updateHealth = true;
 
 		int totalEnemyDamage = enemy->attackDamage * enemy->quantity;
 		int newHealth = totalHealth -= totalEnemyDamage;
@@ -213,6 +216,7 @@ void Character::Attack(Character* enemy)
 		{
 			int quantityDead = totalEnemyDamage / health;
 			quantity -= quantityDead;
+			updateHealth = true;
 		}
 		else
 		{
@@ -220,6 +224,7 @@ void Character::Attack(Character* enemy)
 			printf("die kurwa player!\n");
 			//quantity = 0;
 			isAlive = false;
+			imageDisabled = true;
 		}
 	}
 	else
@@ -227,6 +232,7 @@ void Character::Attack(Character* enemy)
 		//DIE
 		//printf("die kurwa enemy!\n");
 		enemy->isAlive = false;
+		enemy->imageDisabled = true;
 	}
 }
 
@@ -237,9 +243,12 @@ void Character::UpdateHealth(SDL_Renderer* rend, SDL_Surface* textSur, TTF_Font*
 
 	const char* text_ = CastToArray(quantity);
 
-	textSur = TTF_RenderText_Solid(font, text_, { 255, 255, 255 });
+	if (isAlive)
+	{
+		textSur = TTF_RenderText_Solid(font, text_, { 255, 255, 255 });
 
-	textTexture = SDL_CreateTextureFromSurface(rend, textSur);
+		textTexture = SDL_CreateTextureFromSurface(rend, textSur);
+	}
 
 	SDL_FreeSurface(textSur);
 }
@@ -788,21 +797,31 @@ int main()
 
 		for (int i = 0; i < 8; i++)
 		{
-			aiCharacters[i]->UpdateHealth(renderer, textSurface, font);
-			playerCharacters[i]->UpdateHealth(renderer, textSurface, font);
+			if (aiCharacters[i]->updateHealth == true)
+			{
+				aiCharacters[i]->UpdateHealth(renderer, textSurface, font);
+				aiCharacters[i]->updateHealth = false;
+			}
+			if (playerCharacters[i]->updateHealth == true)
+			{
+				playerCharacters[i]->UpdateHealth(renderer, textSurface, font);
+				playerCharacters[i]->updateHealth = false;
+			}
 		}
 
 		for (int i = 0; i < 8; i++)
 		{
-			if (playerCharacters[i]->isAlive == false)
+			if (playerCharacters[i]->isAlive == false && playerCharacters[i]->imageDisabled == true)
 			{
 				playerCharacters[i]->texture = SetTexture(surface, renderer, "skull.png");
-				playerCharacters[i]->textTexture = SetTexture(surface, renderer, "close.png");
+				SDL_DestroyTexture(playerCharacters[i]->textTexture);
+				playerCharacters[i]->imageDisabled = false;
 			}
-			if (aiCharacters[i]->isAlive == false)
+			if (aiCharacters[i]->isAlive == false && aiCharacters[i]->imageDisabled == true)
 			{
 				aiCharacters[i]->texture = SetTexture(surface, renderer, "skull.png");;
-				aiCharacters[i]->textTexture = SetTexture(surface, renderer, "close.png");
+				SDL_DestroyTexture(aiCharacters[i]->textTexture);
+				aiCharacters[i]->imageDisabled = false;
 			}
 		}
 
