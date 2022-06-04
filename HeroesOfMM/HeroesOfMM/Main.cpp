@@ -225,6 +225,7 @@ void Character::Attack(Character* enemy)
 			//quantity = 0;
 			isAlive = false;
 			imageDisabled = true;
+			battlefield[currentGrid.x][currentGrid.y] = 100;
 		}
 	}
 	else
@@ -233,6 +234,7 @@ void Character::Attack(Character* enemy)
 		//printf("die kurwa enemy!\n");
 		enemy->isAlive = false;
 		enemy->imageDisabled = true;
+		battlefield[enemy->currentGrid.x][enemy->currentGrid.y] = 100;
 	}
 }
 
@@ -535,6 +537,7 @@ Vector2i SetAiDestination(Vector2i vector)
 	}
 }
 
+
 void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget, bool* playerMarkedEnemy, Character* playerTarget, int random)
 {
 	if (*playerIsMoving)
@@ -583,7 +586,7 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 			*aiIsMoving = true;
 			*playerMarkedEnemy = false;
 			SetAllGridElementsToZero();
-			battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
+			battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 100;
 		}
 	}
 
@@ -621,7 +624,7 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 			aiCharacter->destinationGrid.y = 0;
 			*aiIsMoving = false;
 			SetAllGridElementsToZero();
-			battlefield[aiCharacter->currentGrid.y][aiCharacter->currentGrid.x] = 255;
+			battlefield[aiCharacter->currentGrid.y][aiCharacter->currentGrid.x] = 100;
 			*tour = nextTour;
 		}
 	}
@@ -759,8 +762,6 @@ int main()
 		// Clearing the screen
 		SDL_RenderClear(renderer);
 
-		//PlayTour2(playerCharacters, aiCharacters, &playerIsMoving, &playerFinishMove, &aiIsMoving, 0, 1, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
-
 		switch (tour)
 		{
 		case 0:
@@ -793,6 +794,18 @@ int main()
 
 		for (int i = 0; i < 8; i++)
 		{
+			SetRect(&playerCharacters[i]->rect, playerCharacters[i]->position);
+			SetRect(&aiCharacters[i]->rect, aiCharacters[i]->position);
+			DrawImage(renderer, playerCharacters[i]->texture, playerCharacters[i]->rect);
+			DrawImage(renderer, aiCharacters[i]->texture, aiCharacters[i]->rect);
+
+			SetTextRect(&playerCharacters[i]->textRect, playerCharacters[i]->position);
+			SetTextRect(&aiCharacters[i]->textRect, aiCharacters[i]->position);
+			DrawImage(renderer, playerCharacters[i]->textTexture, playerCharacters[i]->textRect);
+			DrawImage(renderer, aiCharacters[i]->textTexture, aiCharacters[i]->textRect);
+		}
+		for (int i = 0; i < 8; i++)
+		{
 			if (aiCharacters[i]->updateHealth == true && aiCharacters[i]->isAlive == true)
 			{
 				aiCharacters[i]->UpdateHealth(renderer, textSurface, font);
@@ -821,19 +834,6 @@ int main()
 				aiCharacters[i]->textTexture = SetTexture(surface, renderer, "close.png");;
 				aiCharacters[i]->imageDisabled = false;
 			}
-		}
-
-		for (int i = 0; i < 8; i++)
-		{
-			SetRect(&playerCharacters[i]->rect, playerCharacters[i]->position);
-			SetRect(&aiCharacters[i]->rect, aiCharacters[i]->position);
-			DrawImage(renderer, playerCharacters[i]->texture, playerCharacters[i]->rect);
-			DrawImage(renderer, aiCharacters[i]->texture, aiCharacters[i]->rect);
-
-			SetTextRect(&playerCharacters[i]->textRect, playerCharacters[i]->position);
-			SetTextRect(&aiCharacters[i]->textRect, aiCharacters[i]->position);
-			DrawImage(renderer, playerCharacters[i]->textTexture, playerCharacters[i]->textRect);
-			DrawImage(renderer, aiCharacters[i]->textTexture, aiCharacters[i]->textRect);
 		}
 
 		SetRect(&obstacle1.rectObstacle, obstacle1.position);
