@@ -535,58 +535,88 @@ Vector2i SetAiDestination(Vector2i vector)
 	}
 }
 
-void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget, bool* playerMarkedEnemy, Character* playerTarget)
+void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIsMoving, bool* playerFinishMove, bool* aiIsMoving, int* tour, int nextTour, Vector2i mousePos, Character* aiTarget, bool* playerMarkedEnemy, Character* playerTarget, int random)
 {
 	if (*playerIsMoving)
 	{
-		if (*playerMarkedEnemy)
+		if (playerCharacter->isAlive)
 		{
-			if (playerCharacter->isAlive)
+			if (*playerMarkedEnemy)
 			{
 				playerCharacter->Move(SetAiDestination({ playerTarget->currentGrid.x - 1, playerTarget->currentGrid.y - 1 }));
+
+				if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
+				{
+					playerCharacter->Attack(playerTarget);
+					playerCharacter->destinationGrid.x = 0;
+					playerCharacter->destinationGrid.y = 0;
+					*playerIsMoving = false;
+					*playerFinishMove = true;
+					*aiIsMoving = true;
+					*playerMarkedEnemy = false;
+					SetAllGridElementsToZero();
+					battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
+				}
 			}
 			else
 			{
-				playerCharacter->destinationGrid = playerCharacter->currentGrid;
-			}
+				playerCharacter->Move(MouseToGridPos(mousePos));
 
-			if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
-			{
-				playerCharacter->Attack(playerTarget);
-				playerCharacter->destinationGrid.x = 0;
-				playerCharacter->destinationGrid.y = 0;
-				*playerIsMoving = false;
-				*playerFinishMove = true;
-				*aiIsMoving = true;
-				*playerMarkedEnemy = false;
-				SetAllGridElementsToZero();
-				battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
+				if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
+				{
+					playerCharacter->destinationGrid.x = 0;
+					playerCharacter->destinationGrid.y = 0;
+					*playerIsMoving = false;
+					*playerFinishMove = true;
+					*aiIsMoving = true;
+					SetAllGridElementsToZero();
+					battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
+				}
 			}
 		}
-		else
+		else if (!playerCharacter->isAlive)
 		{
-			playerCharacter->Move(MouseToGridPos(mousePos));
-
-			if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
-			{
-				playerCharacter->destinationGrid.x = 0;
-				playerCharacter->destinationGrid.y = 0;
-				*playerIsMoving = false;
-				*playerFinishMove = true;
-				*aiIsMoving = true;
-				SetAllGridElementsToZero();
-				battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
-			}
+			playerCharacter->destinationGrid.x = 0;
+			playerCharacter->destinationGrid.y = 0;
+			*playerIsMoving = false;
+			*playerFinishMove = true;
+			*aiIsMoving = true;
+			*playerMarkedEnemy = false;
+			SetAllGridElementsToZero();
+			battlefield[playerCharacter->currentGrid.y][playerCharacter->currentGrid.x] = 255;
 		}
 	}
 
-	if (*playerFinishMove && *aiIsMoving && aiCharacter->isAlive)
+	if (*playerFinishMove && *aiIsMoving)
 	{
-		aiCharacter->Move(SetAiDestination({ aiTarget->currentGrid.x - 1, aiTarget->currentGrid.y - 1 }));
-
-		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
+		if (aiCharacter->isAlive)
 		{
-			aiCharacter->Attack(aiTarget);
+			printf("randd %i", random);
+			if (random < 6)
+			{
+				aiCharacter->Move(SetAiDestination({ aiTarget->currentGrid.x - 1, aiTarget->currentGrid.y - 1 }));
+			}
+			else
+			{
+				aiCharacter->Move(GetRandomGrid());
+			}
+
+			if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
+			{
+				if (random < 6)
+				{
+					aiCharacter->Attack(aiTarget);
+				}
+				aiCharacter->destinationGrid.x = 0;
+				aiCharacter->destinationGrid.y = 0;
+				*aiIsMoving = false;
+				SetAllGridElementsToZero();
+				battlefield[aiCharacter->currentGrid.y][aiCharacter->currentGrid.x] = 255;
+				*tour = nextTour;
+			}
+		}
+		else if(!aiCharacter->isAlive)
+		{
 			aiCharacter->destinationGrid.x = 0;
 			aiCharacter->destinationGrid.y = 0;
 			*aiIsMoving = false;
@@ -627,23 +657,23 @@ int main()
 		return -1;
 	}
 
-	Character horseRider({ 1,2 }, surface, renderer, textSurface, "horseRider.png", font, 10, 8, 2);
-	Character jester({ 1,3 }, surface, renderer, textSurface, "jester.png", font, 12, 6, 9);
-	Character executioner({ 1,4 }, surface, renderer, textSurface, "executioner.png", font, 15, 4, 14);
+	Character horseRider({ 1,2 }, surface, renderer, textSurface, "horseRider.png", font, 10, 18, 2);
+	Character jester({ 1,3 }, surface, renderer, textSurface, "jester.png", font, 12, 16, 9);
+	Character executioner({ 1,4 }, surface, renderer, textSurface, "executioner.png", font, 15, 3, 14);
 	Character king({ 1,5 }, surface, renderer, textSurface, "king.png", font, 1, 50, 30);
 	Character queen({ 1,6 }, surface, renderer, textSurface, "queen.png", font, 1, 30, 50);
-	Character wizard({ 1,7 }, surface, renderer, textSurface, "wizard.png", font, 6, 8, 9);
-	Character dragon({ 1,8 }, surface, renderer, textSurface, "dragon.png", font, 4, 3, 10);
-	Character soldier({ 1,9 }, surface, renderer, textSurface, "soldier.png", font, 12, 8, 3);
+	Character wizard({ 1,7 }, surface, renderer, textSurface, "wizard.png", font, 6, 18, 9);
+	Character dragon({ 1,8 }, surface, renderer, textSurface, "dragon.png", font, 4, 13, 10);
+	Character soldier({ 1,9 }, surface, renderer, textSurface, "soldier.png", font, 12, 18, 3);
 
-	Character centaur({ 15,2 }, surface, renderer, textSurface, "centaur.png", font, 4, 8, 2);
+	Character centaur({ 15,2 }, surface, renderer, textSurface, "centaur.png", font, 4, 18, 2);
 	Character cthulhu({ 15,3 }, surface, renderer, textSurface, "cthulhu.png", font, 10, 10, 10);
 	Character cyclops({ 15,4 }, surface, renderer, textSurface, "cyclops.png", font, 9, 12, 3);
-	Character griffin({ 15,5 }, surface, renderer, textSurface, "griffin.png", font, 12, 4, 19);
-	Character minotaur({ 15,6 }, surface, renderer, textSurface, "minotaur.png", font, 3, 4, 6);
-	Character troll({ 15,7 }, surface, renderer, textSurface, "troll.png", font, 1, 2, 10);
-	Character werewolf({ 15,8 }, surface, renderer, textSurface, "werewolf.png", font, 5, 3, 10);
-	Character snake({ 15,9 }, surface, renderer, textSurface, "snake.png", font, 6, 5, 4);
+	Character griffin({ 15,5 }, surface, renderer, textSurface, "griffin.png", font, 12, 14, 19);
+	Character minotaur({ 15,6 }, surface, renderer, textSurface, "minotaur.png", font, 3, 14, 6);
+	Character troll({ 15,7 }, surface, renderer, textSurface, "troll.png", font, 1, 12, 10);
+	Character werewolf({ 15,8 }, surface, renderer, textSurface, "werewolf.png", font, 5, 13, 10);
+	Character snake({ 15,9 }, surface, renderer, textSurface, "snake.png", font, 6, 15, 4);
 
 	Character* playerCharacters[]{
 	&horseRider, &jester, &executioner, &king, &queen, &wizard, &dragon, &soldier
@@ -710,6 +740,7 @@ int main()
 
 					SDL_GetMouseState(&mousePos.x, &mousePos.y);
 					aiTarget = GetRandomCharacter(playerCharacters);
+					random = GetRandom11();
 
 					Vector2i grid = MouseToGridPos(mousePos);
 
@@ -728,32 +759,33 @@ int main()
 		// Clearing the screen
 		SDL_RenderClear(renderer);
 
+		//PlayTour2(playerCharacters, aiCharacters, &playerIsMoving, &playerFinishMove, &aiIsMoving, 0, 1, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
 
 		switch (tour)
 		{
 		case 0:
-			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&horseRider, &centaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 1, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		case 1:
-			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&jester, &cthulhu, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 2, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		case 2:
-			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&executioner, &cyclops, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 3, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		case 3:
-			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&king, &griffin, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 4, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		case 4:
-			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&queen, &minotaur, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 5, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		case 5:
-			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&wizard, &troll, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 6, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		case 6:
-			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&dragon, &werewolf, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 7, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		case 7:
-			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex]);
+			PlayTour(&soldier, &snake, &playerIsMoving, &playerFinishMove, &aiIsMoving, &tour, 0, mousePos, playerCharacters[aiTarget], &playerMarkedEnemy, aiCharacters[enemyIndex], random);
 			break;
 		default:
 			break;
