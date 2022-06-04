@@ -167,16 +167,12 @@ struct Character
 	bool imageDisabled = false;
 	bool updateHealth = false;
 
-	int quantity = 10;
-	int health = 20;
-	int attackDamage = 15;
-
-	//int healthValue = quantity * health;
-	//int attackValue = quantity * attackDamage;
+	int quantity = 0;
+	int health = 0;
+	int attackDamage = 0;
 
 	SDL_Texture* texture;
 	SDL_Texture* textTexture;
-
 	SDL_Rect rect;
 	SDL_Rect textRect;
 
@@ -200,9 +196,7 @@ void Character::Attack(Character* enemy)
 
 	int totalDamage = attackDamage * quantity;
 
-
 	int newEnemyHealth = totalEnemyHealth -= totalDamage;
-	printf("%i\n", newEnemyHealth);
 
 	if (newEnemyHealth > 0)
 	{
@@ -220,9 +214,6 @@ void Character::Attack(Character* enemy)
 		}
 		else
 		{
-			//DIE
-			printf("die kurwa player!\n");
-			//quantity = 0;
 			isAlive = false;
 			imageDisabled = true;
 			battlefield[currentGrid.x][currentGrid.y] = 100;
@@ -230,8 +221,6 @@ void Character::Attack(Character* enemy)
 	}
 	else
 	{
-		//DIE
-		//printf("die kurwa enemy!\n");
 		enemy->isAlive = false;
 		enemy->imageDisabled = true;
 		battlefield[enemy->currentGrid.x][enemy->currentGrid.y] = 100;
@@ -594,7 +583,6 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	{
 		if (aiCharacter->isAlive)
 		{
-			printf("randd %i", random);
 			if (random < 6)
 			{
 				aiCharacter->Move(SetAiDestination({ aiTarget->currentGrid.x - 1, aiTarget->currentGrid.y - 1 }));
@@ -854,7 +842,6 @@ int main()
 	// If we reached here then the main loop stoped
 	// That means the game wants to quit
 
-	//SDL_DestroyTexture(textTexture);
 	SDL_FreeSurface(textSurface);
 	// Shutting down the renderer
 	SDL_DestroyRenderer(renderer);
