@@ -541,15 +541,18 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 	{
 		if (*playerMarkedEnemy)
 		{
-			playerCharacter->Move(SetAiDestination({playerTarget->currentGrid.x - 1, playerTarget->currentGrid.y - 1}));
+			if (playerCharacter->isAlive)
+			{
+				playerCharacter->Move(SetAiDestination({ playerTarget->currentGrid.x - 1, playerTarget->currentGrid.y - 1 }));
+			}
+			else
+			{
+				playerCharacter->destinationGrid = playerCharacter->currentGrid;
+			}
 
 			if (playerCharacter->currentGrid.x == playerCharacter->destinationGrid.x && playerCharacter->currentGrid.y == playerCharacter->destinationGrid.y)
 			{
-				printf("p %i\n", playerCharacter->quantity);
-				printf("t %i\n", playerTarget->quantity);
 				playerCharacter->Attack(playerTarget);
-				printf("p %i\n", playerCharacter->quantity);
-				printf("t %i\n", playerTarget->quantity);
 				playerCharacter->destinationGrid.x = 0;
 				playerCharacter->destinationGrid.y = 0;
 				*playerIsMoving = false;
@@ -576,17 +579,14 @@ void PlayTour(Character* playerCharacter, Character* aiCharacter, bool* playerIs
 			}
 		}
 	}
-	if (*playerFinishMove && *aiIsMoving )
+
+	if (*playerFinishMove && *aiIsMoving && aiCharacter->isAlive)
 	{
 		aiCharacter->Move(SetAiDestination({ aiTarget->currentGrid.x - 1, aiTarget->currentGrid.y - 1 }));
 
 		if (aiCharacter->currentGrid.x == aiCharacter->destinationGrid.x && aiCharacter->currentGrid.y == aiCharacter->destinationGrid.y)
 		{
-			printf("p %i\n", playerCharacter->quantity);
-			printf("a %i\n", aiCharacter->quantity);
 			aiCharacter->Attack(aiTarget);
-			printf("p %i\n", playerCharacter->quantity);
-			printf("a %i\n", aiCharacter->quantity);
 			aiCharacter->destinationGrid.x = 0;
 			aiCharacter->destinationGrid.y = 0;
 			*aiIsMoving = false;
@@ -719,7 +719,6 @@ int main()
 						{
 							playerMarkedEnemy = true;
 							enemyIndex = i;
-							//printf("target %i\n", aiCharacters[i]);
 						}
 					}
 				}
@@ -780,12 +779,14 @@ int main()
 			{
 				playerCharacters[i]->texture = SetTexture(surface, renderer, "skull.png");
 				SDL_DestroyTexture(playerCharacters[i]->textTexture);
+				playerCharacters[i]->textTexture = SetTexture(surface, renderer, "close.png");
 				playerCharacters[i]->imageDisabled = false;
 			}
 			if (aiCharacters[i]->isAlive == false && aiCharacters[i]->imageDisabled == true)
 			{
 				aiCharacters[i]->texture = SetTexture(surface, renderer, "skull.png");;
 				SDL_DestroyTexture(aiCharacters[i]->textTexture);
+				aiCharacters[i]->textTexture = SetTexture(surface, renderer, "close.png");;
 				aiCharacters[i]->imageDisabled = false;
 			}
 		}
@@ -822,7 +823,7 @@ int main()
 	// That means the game wants to quit
 
 	//SDL_DestroyTexture(textTexture);
-	//SDL_FreeSurface(textSurface);
+	SDL_FreeSurface(textSurface);
 	// Shutting down the renderer
 	SDL_DestroyRenderer(renderer);
 
