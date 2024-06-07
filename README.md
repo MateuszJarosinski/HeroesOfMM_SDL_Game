@@ -1,1 +1,2 @@
 # HeroesOfMM_SDL_Game
+SDL Heroes of Might and Magic is a game made as part of a programming class at my university. The project was made in pure C and using the SDL library which was a huge challenge! This project has brought me a lot of knowledge not only about the C programming language, but has given me an understanding of how low-level programming languages work, so now I am using the knowledge I gained when working in higher-level languages like C#.
